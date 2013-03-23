@@ -1,0 +1,50 @@
+{
+  "name": "grunt-maven-tasks",
+  "description": "Grunt plugin to deploy a file to a maven repository",
+  "version": "0.1.0",
+  "homepage": "https://github.com/smh/grunt-maven-tasks",
+  "author": {
+    "name": "Stein Martin Hustad",
+    "email": "stein@hustad.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/smh/grunt-maven-tasks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smh/grunt-maven-tasks/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/smh/grunt-maven-tasks/blob/master/LICENSE-MIT"
+    }
+  ],
+  "main": "Gruntfile.js",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "dependencies": {
+    "semver": "~1.1.4",
+    "grunt-contrib-compress": "~0.4.5"
+  },
+  "devDependencies": {
+    "mocha": "~1.8.2",
+    "async": "~0.2.6",
+    "chai": "~1.5.0",
+    "chai-things": "~0.1.1",
+    "rimraf": "~2.1.4",
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.1.1",
+    "grunt-simple-mocha": "~0.3.2"
+  },
+  "peerDependencies": {
+    "grunt": "~0.4.1"
+  },
+  "keywords": [
+    "gruntplugin", "maven"
+  ]
+}
