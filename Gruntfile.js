@@ -26,7 +26,7 @@ module.exports = function(grunt) {
     // Unit tests.
     simplemocha: {
       options: {
-        timeout: 3000,
+        timeout: 10000, // maven can be rather slow
         ui: 'bdd',
         reporter: 'tap'
       },
