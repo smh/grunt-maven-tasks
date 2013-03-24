@@ -34,7 +34,7 @@ describe('maven:deploy', function() {
   });
 
   it('should deploy artifact to repository', function() {
-    verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT');
+    verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo');
   });
 
   it('should not touch package.json', function() {
@@ -73,7 +73,7 @@ function testRelease(cmd, options) {
     });
 
     it('should deploy artifact to repository', function() {
-      verifyDeployedFiles('test.project', 'test-project', options.release);
+      verifyDeployedFiles('test.project', 'test-project', options.release, 'zip', 'file://repo');
     });
 
     it('should update package.json version to ' + options.next, function() {
@@ -115,20 +115,27 @@ function exec(command, fn) {
   });
 }
 
-function verifyDeployedFiles(groupId, artifactId, version) {
-  var folder = path.join(projectDir, 'repo', groupId.replace('.', '/'), artifactId, version);
-  var timestampedVersion = version.replace('SNAPSHOT', '\\d{8}\\.\\d{6}-\\d*');
-  var files = fs.readdirSync(folder);
-  ['zip', 'pom'].forEach(function(ext) {
-    var re = new RegExp('^' + artifactId + '-' + timestampedVersion + '.' + ext + '$');
-    files.should.include.something.that.match(re);
-  });
+function verifyDeployedFiles(groupId, artifactId, version, packaging, url, repositoryId) {
+  var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, 'deploy-file.json')));
+  deploy.should.have.property('file', artifactId + '-' + version + '.' + packaging);
+  deploy.should.have.property('groupId', groupId);
+  deploy.should.have.property('artifactId', artifactId);
+  deploy.should.have.property('version', version);
+  deploy.should.have.property('packaging', packaging);
+  deploy.should.have.property('url', url);
+  if (repositoryId) {
+    deploy.should.have.property('repositoryId', repositoryId);
+  }
 }
 
 function gruntfile(initConfig) {
-  return 'module.exports = function(grunt) {\n' +
+  return 'var fs = require("fs");\n' +
+         'module.exports = function(grunt) {\n' +
          '  grunt.initConfig(' + JSON.stringify(initConfig) + ');\n' +
          '  grunt.loadTasks("' + path.join(__dirname, '..', 'tasks') + '")\n' +
+         '  grunt.registerTask("maven:deploy-file", function() {\n' +
+         '    fs.writeFileSync("deploy-file.json", JSON.stringify(grunt.config("maven.deploy-file.options")));\n' +
+         '  });\n' +
          '};\n';
 }
 
