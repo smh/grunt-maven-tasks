@@ -155,6 +155,8 @@ function setupGruntProject(pkg, initConfig, useGit, fn) {
   if (useGit) {
     commands = commands.concat([
       function(cb) { exec('git init', cb); },
+      function(cb) { exec('git config user.email "dummy@mailinator.com"', cb); },
+      function(cb) { exec('git config user.name "dummy"', cb); },
       function(cb) { exec('git add .', cb); },
       function(cb) { exec('git commit -m "Initial commit"', cb); }
     ]);
