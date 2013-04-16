@@ -26,6 +26,7 @@ module.exports = function(grunt) {
     // Unit tests.
     simplemocha: {
       options: {
+        timeout: 5000,
         ui: 'bdd',
         reporter: 'tap'
       },

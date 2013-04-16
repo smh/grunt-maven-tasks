@@ -10,6 +10,14 @@
 
 var semver = require('semver');
 
+function injectDestFolder(version, files) {
+  var path = require('path');
+  files.forEach(function(file) {
+    file.dest = path.join(version, file.dest || '');
+  });
+  return files;
+}
+
 module.exports = function(grunt) {
   grunt.registerMultiTask('maven', 'Packages and deploys artifact to maven repo', function(version, mode) {
     var pkg = grunt.file.readJSON('package.json');
@@ -26,7 +34,7 @@ module.exports = function(grunt) {
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
       grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', this.files);
+      grunt.config.set('maven.package.files', injectDestFolder(options.artifactId + '-' + options.version, this.files));
       grunt.config.set('maven.deploy-file.options', options);
 
       grunt.task.run('maven:package',
@@ -60,7 +68,7 @@ module.exports = function(grunt) {
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
       grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', this.files);
+      grunt.config.set('maven.package.files', injectDestFolder(options.artifactId + '-' + options.version, this.files));
       grunt.config.set('maven.deploy-file.options', options);
 
       grunt.task.run('maven:version:' + options.version,
