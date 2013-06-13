@@ -86,6 +86,12 @@ module.exports = function(grunt) {
 
   grunt.registerTask('maven:deploy-file', function() {
     var options = grunt.config('maven.deploy-file.options');
+
+    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
+    if (options.packaging === 'war'){
+        options.file = renameForWarTypeArtifacts(options.file);
+    }
+    
     var args = [ 'deploy:deploy-file' ];
     args.push('-Dfile='         + options.file);
     args.push('-DgroupId='      + options.groupId);
@@ -177,6 +183,16 @@ module.exports = function(grunt) {
       grunt.verbose.or.write(msg);
       grunt.log.error().error('Unable to process task.');
       throw grunt.util.error('Required options ' + failProps.join(', ') + ' missing.');
+    }
+  }
+
+  function renameForWarTypeArtifacts(filename) {
+    var warFileName = filename.replace('zip', 'war');
+    try {
+      fs.renameSync(filename, warFileName);
+      return warFileName;
+    } catch (e) {
+      throw e;
     }
   }
 };
