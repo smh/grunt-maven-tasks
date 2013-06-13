@@ -9,6 +9,7 @@
 'use strict';
 
 var semver = require('semver');
+var fs = require('fs');
 
 function injectDestFolder(version, files) {
   var path = require('path');
@@ -91,7 +92,7 @@ module.exports = function(grunt) {
     if (options.packaging === 'war'){
         options.file = renameForWarTypeArtifacts(options.file);
     }
-    
+
     var args = [ 'deploy:deploy-file' ];
     args.push('-Dfile='         + options.file);
     args.push('-DgroupId='      + options.groupId);
