@@ -107,6 +107,18 @@ Optional
 
 The repository id of the repository to deploy to. Used for looking up authentication in settings.xml.
 
+### options.type
+Type: `String`
+Optional
+
+Enables you to choose a different file extension for your artifact besides .zip which is useful when using the Maven WAR-plugin
+
+### options.injectDestFolder
+Type: `String`
+Optional
+
+Enables you to turn off the injection of destination folder inside your artifact allowing you to choose the structure you want by configuring the compress task.
+
 ### Usage Examples
 
 #### Default Options
@@ -152,7 +164,8 @@ grunt.initConfig({
     }
   }
 })
-```
+
+In order to customize the output archive, please look at the documenations for the [grunt-contrib-compress task](https://github.com/gruntjs/grunt-contrib-compress).
 
 ## Contributing
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
