@@ -9,6 +9,7 @@
 'use strict';
 
 var semver = require('semver');
+var fs = require('fs');
 
 function injectDestFolder(version, files) {
   var path = require('path');
@@ -33,8 +34,12 @@ module.exports = function(grunt) {
       });
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
+      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
+        this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
+      }
+
       grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', injectDestFolder(options.artifactId + '-' + options.version, this.files));
+      grunt.config.set('maven.package.files', this.files);
       grunt.config.set('maven.deploy-file.options', options);
 
       grunt.task.run('maven:package',
@@ -67,8 +72,12 @@ module.exports = function(grunt) {
       }
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
+      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
+        this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
+      }
+
       grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', injectDestFolder(options.artifactId + '-' + options.version, this.files));
+      grunt.config.set('maven.package.files', this.files);
       grunt.config.set('maven.deploy-file.options', options);
 
       grunt.task.run('maven:version:' + options.version,
@@ -86,6 +95,12 @@ module.exports = function(grunt) {
 
   grunt.registerTask('maven:deploy-file', function() {
     var options = grunt.config('maven.deploy-file.options');
+
+    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
+    if (options.packaging === 'war'){
+        options.file = renameForWarTypeArtifacts(options.file);
+    }
+
     var args = [ 'deploy:deploy-file' ];
     args.push('-Dfile='         + options.file);
     args.push('-DgroupId='      + options.groupId);
@@ -177,6 +192,16 @@ module.exports = function(grunt) {
       grunt.verbose.or.write(msg);
       grunt.log.error().error('Unable to process task.');
       throw grunt.util.error('Required options ' + failProps.join(', ') + ' missing.');
+    }
+  }
+
+  function renameForWarTypeArtifacts(filename) {
+    var warFileName = filename.replace('zip', 'war');
+    try {
+      fs.renameSync(filename, warFileName);
+      return warFileName;
+    } catch (e) {
+      throw e;
     }
   }
 };

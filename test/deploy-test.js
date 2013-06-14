@@ -16,7 +16,7 @@ describe('maven:deploy', function() {
   var pkg = { name: 'test-project', version: '1.0.0-SNAPSHOT' };
   var initConfig = {
     maven: {
-      options: { groupId: 'test.project' },
+      options: { groupId: 'test.project', type: 'war' },
       deploy: {
         options: { url: 'file://repo' },
         files: [ { src: [ '**', '!node_modules/**' ] } ]
@@ -35,6 +35,9 @@ describe('maven:deploy', function() {
 
   it('should deploy artifact to repository', function() {
     verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo');
+  });
+  it('should rename artifacts with war-extension when configured as a type', function() {
+    verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo', null, 'war');
   });
 
   it('should not touch package.json', function() {
@@ -115,7 +118,7 @@ function exec(command, fn) {
   });
 }
 
-function verifyDeployedFiles(groupId, artifactId, version, packaging, url, repositoryId) {
+function verifyDeployedFiles(groupId, artifactId, version, packaging, url, repositoryId, type) {
   var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, 'deploy-file.json')));
   deploy.should.have.property('file', artifactId + '-' + version + '.' + packaging);
   deploy.should.have.property('groupId', groupId);
@@ -125,6 +128,9 @@ function verifyDeployedFiles(groupId, artifactId, version, packaging, url, repos
   deploy.should.have.property('url', url);
   if (repositoryId) {
     deploy.should.have.property('repositoryId', repositoryId);
+  }
+  if (type){
+    deploy.should.have.property('type', type);
   }
 }
 
