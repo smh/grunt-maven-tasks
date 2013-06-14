@@ -34,8 +34,12 @@ module.exports = function(grunt) {
       });
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
+      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
+        this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
+      }
+
       grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', injectDestFolder(options.artifactId + '-' + options.version, this.files));
+      grunt.config.set('maven.package.files', this.files);
       grunt.config.set('maven.deploy-file.options', options);
 
       grunt.task.run('maven:package',
@@ -68,8 +72,12 @@ module.exports = function(grunt) {
       }
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
+      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
+        this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
+      }
+
       grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', injectDestFolder(options.artifactId + '-' + options.version, this.files));
+      grunt.config.set('maven.package.files', this.files);
       grunt.config.set('maven.deploy-file.options', options);
 
       grunt.task.run('maven:version:' + options.version,
