@@ -164,6 +164,7 @@ grunt.initConfig({
     }
   }
 })
+```
 
 In order to customize the output archive, please look at the documenations for the [grunt-contrib-compress task](https://github.com/gruntjs/grunt-contrib-compress).
 
