@@ -34,7 +34,7 @@ module.exports = function(grunt) {
       });
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
-      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
+      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder === true) {
         this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
       }
 
@@ -72,7 +72,7 @@ module.exports = function(grunt) {
       }
       options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
 
-      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
+      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder === true) {
         this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
       }
 
