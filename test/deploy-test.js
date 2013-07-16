@@ -20,7 +20,7 @@ describe('maven:deploy', function() {
       deploy: {
         options: { url: 'file://repo' },
         files: [ { src: [ '**', '!node_modules/**' ] } ]
-      },
+      }
     }
   };
   before(function(done) {
