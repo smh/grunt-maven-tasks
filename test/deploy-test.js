@@ -12,69 +12,84 @@ chai.use(require('chai-things'));
 
 var projectDir = path.join('/tmp', '/test-project');
 
-var CONFIGS = {
-  DEPLOY: {
-    maven: {
+var initConfig = {
+maven: {
+  options: {
+      groupId: 'test.project',
+      type: 'war'
+    },
+    src: [ '**', '!node_modules/**' ],
+    deploy: {
+      options: {
+        url: 'file://repo'
+      }
+    },
+    deployWithGoal: {
       options: {
         goal: 'deploy',
-        groupId: 'test.project',
-        url: 'file://repo',
-        type: 'war'
-      },
-      src: [ '**', '!node_modules/**' ]
-    }
-  },
-  RELEASE: {
-    maven: {
-      releaseA: {
-        options: {
-          goal: 'release',
-          groupId: 'test.project',
-          url: 'file://repo'
-        },
-        src: [ '**', '!node_modules/**' ]
+        url: 'file://repo'
+      }
+    },
+    release: {
+      options: {
+        url: 'file://repo'
+      }
+    },
+    releaseWithGoal: {
+      options: {
+        goal: 'release',
+        url: 'file://repo'
       }
     }
   }
 };
 
-describe('maven:deploy', function() {
-  var pkg = { name: 'test-project', version: '1.0.0-SNAPSHOT' };
-  var initConfig = CONFIGS.DEPLOY;
-  before(function(done) {
-    async.series([
-      function(cb) { setupGruntProject(pkg, initConfig, cb); },
-      function(cb) { exec('grunt maven --no-color', done); }
-    ], done);
-  });
-  after(function(done) {
-    rimraf(projectDir, done);
-  });
+// test various deploy configurations
+['deploy', 'deployWithGoal'].forEach(function(target) {
+  describe(target + ' -', function() {
+    var pkg = { name: 'test-project', version: '1.0.0-SNAPSHOT' };
+    before(function(done) {
+      async.series([
+        function(cb) { setupGruntProject(pkg, initConfig, cb); },
+        function(cb) { exec('grunt maven:' + target + ' --no-color', done); }
+      ], done);
+    });
+    after(function(done) {
+      rimraf(projectDir, done);
+    });
 
-  it('should deploy artifact to repository', function() {
-    verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo');
-  });
-  it('should rename artifacts with war-extension when configured as a type', function() {
-    verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo', null, 'war');
-  });
+    it('should deploy artifact to repository', function() {
+      verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo');
+    });
+    it('should rename artifacts with war-extension when configured as a type', function() {
+      verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo', null, 'war');
+    });
 
-  it('should not touch package.json', function() {
-    var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
-    readPkg.should.eql(pkg);
+    it('should not touch package.json', function() {
+      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
+      readPkg.should.eql(pkg);
+    });
   });
 });
 
-[true, false].forEach(function(withGit) {
-  testRelease('maven:releaseA', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '1.1.0-SNAPSHOT', withGit: withGit });
-  testRelease('maven:releaseA:2.0.0', { current: '1.0.0-SNAPSHOT', release: '2.0.0', next: '2.1.0-SNAPSHOT', withGit: withGit });
-  testRelease('maven:releaseA:major', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '2.0.0-SNAPSHOT', withGit: withGit });
-  testRelease('maven:releaseA:1.0.1:patch', { current: '1.0.0-SNAPSHOT', release: '1.0.1', next: '1.0.2-SNAPSHOT', withGit: withGit });
+// test various release configurations, with and without git support
+['release', 'releaseWithGoal'].forEach(function(target) {
+  describe(target, function() {
+    [false, true].forEach(function(withGit) {
+      describe(withGit ? '(with git support) -' : '-', function() {
+        testRelease('maven:' + target + '', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '1.1.0-SNAPSHOT', withGit: withGit });
+        testRelease('maven:' + target + ':2.0.0', { current: '1.0.0-SNAPSHOT', release: '2.0.0', next: '2.1.0-SNAPSHOT', withGit: withGit });
+        testRelease('maven:' + target + ':major', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '2.0.0-SNAPSHOT', withGit: withGit });
+        testRelease('maven:' + target + ':1.0.1:patch', { current: '1.0.0-SNAPSHOT', release: '1.0.1', next: '1.0.2-SNAPSHOT', withGit: withGit });
+      });
+    });
+  });
 });
 
 function testRelease(cmd, options) {
-  describe(cmd + (options.withGit ? ' with git project' : ''), function() {
+  //describe(cmd + (options.withGit ? ' with git project' : ''), function() {
+  describe(cmd + ' -', function() {
     var pkg = { name: 'test-project', version: options.current };
-    var initConfig = CONFIGS.RELEASE;
     before(function(done) {
       async.series([
         function(cb) { setupGruntProject(pkg, initConfig, options.withGit, cb); },

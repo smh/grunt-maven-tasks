@@ -19,6 +19,10 @@ grunt.loadNpmTasks('grunt-maven-tasks');
 
 ## Supported Maven Goals
 
+### no goal
+
+If no goal is specified, the goal will be set to the target name. This means that the target name must be either `deploy` or `release`. For more flexibility with the naming of your targets, and/or having multiple targets with the same goal, specify the goal explicitly.
+
 ### deploy
 
 _Run the `grunt maven` task with the `goal` option set to `deploy`._
@@ -128,11 +132,11 @@ Files may be specified using any of the supported [Grunt file mapping formats](h
 ### Usage Examples
 
 #### Default Options
-In this example, only required options have been specified.
+In this example, only required options have been specified and the 'goal' is defaulted to the target name.
 
-Running `grunt maven` with the `deploy` goal specified will deploy the artifact to the `snapshot-repos` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`.
+Running `grunt maven:deploy` will deploy the artifact to the `snapshot-repos` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`.
 
-Running `grunt maven` with the`release` goal specified will deploy the artifact to the `release-repo` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`, but with the `-SNAPSHOT` suffix removed. The version in `package.json` will be incremented to the next minor SNAPSHOT version, ie. if it was `1.0.0-SNAPSHOT` it will end up at `1.1.0-SNAPSHOT`. If this is a git repository, it will also commit and tag the release version, as well as commiting the updated package.json version.
+Running `grunt maven:release` will deploy the artifact to the `release-repo` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`, but with the `-SNAPSHOT` suffix removed. The version in `package.json` will be incremented to the next minor SNAPSHOT version, ie. if it was `1.0.0-SNAPSHOT` it will end up at `1.1.0-SNAPSHOT`. If this is a git repository, it will also commit and tag the release version, as well as commiting the updated package.json version.
 
 ```js
 grunt.initConfig({

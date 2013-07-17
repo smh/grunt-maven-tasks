@@ -24,7 +24,9 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('maven', 'Packages and deploys artifact to maven repo', function(version, mode) {
     var options = this.options();
 
-    requireOptionProps(options, ['goal', 'groupId', 'url']);
+    requireOptionProps(options, ['groupId', 'url']);
+
+    options.goal = options.goal || this.target;
 
     if (options.goal === 'deploy') {
       deploy(this);
