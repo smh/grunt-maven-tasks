@@ -17,50 +17,52 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 grunt.loadNpmTasks('grunt-maven-tasks');
 ```
 
-## The "maven" tasks
+## Supported Maven Goals
 
-### deploy task
+### deploy
 
-_Run this task with the `grunt maven:deploy` command._
+_Run the `grunt maven` task with the `goal` option set to `deploy`._
 
-This tasks packages and deploys the artifact to the maven repository.
+This tasks packages and deploys an artifact to a maven repository.
 
 ### release task
 
-_Run this task with the `grunt maven:release` command._
+_Run the `grunt maven` task with the `goal` option set to `release`._
 
-This tasks packages and releases the artifact to the maven repository. It will update the version number in the package.json file to the next development version, and, if this is a git project, it will commit and tag the release.  
+This task packages and releases an artifact to a maven repository. It will update the version number in the package.json file to the next development version, and, if this is a git project, it will commit and tag the release.
 
 By default, it will increment the version number using the `minor` version. This can be overridden in the config section using the `mode` option.
 
-_Run this task with the `grunt maven:release:major` command to bump the next development version using the `major` version mode._
+_Run this task with the `grunt maven:[your-task-target]:major` command to bump the next development version using the `major` version mode._
 
-_Run this task with the `grunt maven:release:1.2.0` command to release version `1.2.0`._
+_Run this task with the `grunt maven:[your-task-target]:1.2.0` command to release version `1.2.0`._
 
-_Run this task with the `grunt maven:release:1.2.0:major` command to release version 1.2.0 and bump the next development version using the `major` version mode._
+_Run this task with the `grunt maven:[your-task-target]:1.2.0:major` command to release version 1.2.0 and bump the next development version using the `major` version mode._
 
 ### Overview
+
 In your project's Gruntfile, add a section named `maven` to the data object passed into `grunt.initConfig()`.
 
 ```js
 grunt.initConfig({
   maven: {
     options: {
-      groupId: 'com.example'
+      goal: 'deploy',
+      groupId: 'com.example',
+      url: '<repository-url>',
     },
-    deploy: {
-      options: { url: '<snapshot-repository-url>' },
-      files: [ { src: [ '**', '!node_modules/**' ] } ]
-    },
-    release: {
-      options: { url: '<release-repository-url>' },
-      files: [ { src: [ '**', '!node_modules/**' ] } ]
-    },
-  },
+    src: [ '**', '!node_modules/**' ]
+  }
 })
 ```
 
 ### Options
+
+#### options.goal
+Type `String`
+Required
+
+The maven goal for the target artifact. Valid values are 'deploy' and 'release'.
 
 #### options.groupId
 Type: `String`
@@ -119,32 +121,69 @@ Optional
 
 Enables you to turn off the injection of destination folder inside your artifact allowing you to choose the structure you want by configuring the compress task.
 
+### Files
+
+Files may be specified using any of the supported [Grunt file mapping formats](http://gruntjs.com/configuring-tasks#files).
+
 ### Usage Examples
 
 #### Default Options
 In this example, only required options have been specified.
 
-Running `grunt maven:deploy` will deploy the artifact to the `snapshot-repos` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`.
+Running `grunt maven` with the `deploy` goal specified will deploy the artifact to the `snapshot-repos` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`.
 
-Running `grunt maven:release` will deploy the artifact to the `release-repo` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`, but with the `-SNAPSHOT` suffix removed. The version in `package.json` will be incremented to the next minor SNAPSHOT version, ie. if it was `1.0.0-SNAPSHOT` it will end up at `1.1.0-SNAPSHOT`. If this is a git repository, it will also commit and tag the release version, as well as commiting the updated package.json version.
+Running `grunt maven` with the`release` goal specified will deploy the artifact to the `release-repo` folder using the groupId `com.example`, the artifactId set to the name in `package.json` and the version set to the version in `package.json`, but with the `-SNAPSHOT` suffix removed. The version in `package.json` will be incremented to the next minor SNAPSHOT version, ie. if it was `1.0.0-SNAPSHOT` it will end up at `1.1.0-SNAPSHOT`. If this is a git repository, it will also commit and tag the release version, as well as commiting the updated package.json version.
 
 ```js
 grunt.initConfig({
   maven: {
     options: { groupId: 'com.example' },
     deploy: {
-      options: { url: 'file://snapshot-repo' },
-      files: [ { src: [ '**', '!node_modules/**' ] } ]
+      options: {
+        goal: 'deploy',
+        url: 'file://snapshot-repo'
+      },
+      src: [ '**', '!node_modules/**' ]
     },
     release: {
-      options: { url: 'file://release-repo' },
-      files: [ { src: [ '**', '!node_modules/**' ] } ]
+      options: {
+        goal: 'release',
+        url: 'file://release-repo'
+      },
+      src: [ '**', '!node_modules/**' ]
     }
   }
 })
 
 grunt.registerTask('deploy', [ 'clean', 'test', 'maven:deploy' ]);
 grunt.registerTask('release', [ 'clean', 'test', 'maven:release' ]);
+```
+
+The `maven` task can be configured to support deployment or release of multiple artifacts:
+
+```js
+grunt.initConfig({
+  maven: {
+    deployA: {
+      options: {
+        goal: 'deploy',
+        groupId: 'com.example',
+        artifactId: 'myNodeArtifact',
+        url: '<repository-url>',
+      },
+      src: [ '**', '!node_modules/**' ]
+    },
+    deployB: {
+      options: {
+        goal: 'deploy',
+        groupId: 'com.example',
+        artifactId: 'myBrowserArtifact',
+        url: '<repository-url>',
+      },
+      src: [ 'target/browser/**', '!target/browser/node_modules/**' ]
+    }
+  }
+})
 ```
 
 #### Custom Options
@@ -156,11 +195,11 @@ grunt.initConfig({
     options: { groupId: 'com.example', artifactId: 'example-project' },
     deploy: {
       options: { url: 'file://snapshot-repo' },
-      files: [ { src: [ '**', '!node_modules/**' ] } ]
+      src: [ '**', '!node_modules/**' ]
     },
     release: {
       options: { url: 'file://release-repo', mode: 'patch' },
-      files: [ { src: [ '**', '!node_modules/**' ] } ]
+      src: [ '**', '!node_modules/**' ]
     }
   }
 })
@@ -170,6 +209,3 @@ In order to customize the output archive, please look at the documenations for t
 
 ## Contributing
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
-
-## Release History
-_(Nothing yet)_
