@@ -11,81 +11,99 @@
 var semver = require('semver');
 var fs = require('fs');
 
-function injectDestFolder(version, files) {
+function injectDestFolder(targetPath, files) {
   var path = require('path');
   files.forEach(function(file) {
-    file.dest = path.join(version, file.dest || '');
+    file.dest = path.join(targetPath, file.dest || '');
   });
   return files;
 }
 
 module.exports = function(grunt) {
+
   grunt.registerMultiTask('maven', 'Packages and deploys artifact to maven repo', function(version, mode) {
-    var pkg = grunt.file.readJSON('package.json');
-    var options;
+    var options = this.options();
 
-    requireOptionProps(this.options(), ['groupId', 'url']);
+    requireOptionProps(options, ['goal', 'groupId', 'url']);
 
-    if (this.target === 'deploy') {
-      options = this.options({
-        artifactId: pkg.name,
-        version: pkg.version,
-        packaging: 'zip'
-      });
-      options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
-
-      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
-        this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
-      }
-
-      grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', this.files);
-      grunt.config.set('maven.deploy-file.options', options);
-
-      grunt.task.run('maven:package',
-                     'maven:deploy-file');
-
-    } else if (this.target === 'release') {
-      options = this.options({
-        artifactId: pkg.name,
-        packaging: 'zip',
-        mode: 'minor'
-      });
-
-      if (version && !mode && isValidMode(version)) {
-        mode = version;
-        version = null;
-      }
-
-      options.mode = mode || options.mode;
-      options.version = version || pkg.version.substr(0, pkg.version.length - '-SNAPSHOT'.length);
-      if (options.nextVersion === 'null-SNAPSHOT') {
-        grunt.fail.fatal('Failed to determine next development version ' +
-                         'based on version (' + options.version.cyan +
-                         ') and mode (' + options.mode.cyan + ')');
-      }
-      options.nextVersion = semver.inc(options.version, options.mode) + '-SNAPSHOT';
-      if (options.nextVersion === 'null-SNAPSHOT') {
-        grunt.fail.fatal('Failed to determine next development version ' +
-                         'based on version (' + options.version.cyan +
-                         ') and mode (' + options.mode.cyan + ')');
-      }
-      options.file = options.file || options.artifactId + '-' + options.version + '.' + options.packaging;
-
-      if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder == true) {
-        this.files = injectDestFolder(options.artifactId + '-' + options.version, this.files);
-      }
-
-      grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
-      grunt.config.set('maven.package.files', this.files);
-      grunt.config.set('maven.deploy-file.options', options);
-
-      grunt.task.run('maven:version:' + options.version,
-                     'maven:package',
-                     'maven:deploy-file',
-                     'maven:version:' + options.nextVersion + ':deleteTag');
+    if (options.goal === 'deploy') {
+      deploy(this);
+    } else if (options.goal === 'release') {
+      release(this, version, mode);
     }
   });
+
+  function deploy(task) {
+    var pkg = grunt.file.readJSON('package.json');
+    var options = task.options({
+      artifactId: pkg.name,
+      version: pkg.version,
+      packaging: 'zip'
+    });
+
+    guaranteeFileName(options);
+    configureDestination(options, task);
+    configureMaven(options, task);
+
+    grunt.task.run('maven:package',
+      'maven:deploy-file');
+  }
+
+  function release(task, version, mode) {
+    var pkg = grunt.file.readJSON('package.json');
+    var options = task.options({
+      artifactId: pkg.name,
+      packaging: 'zip',
+      mode: 'minor'
+    });
+
+    if (version && !mode && isValidMode(version)) {
+      mode = version;
+      version = null;
+    }
+
+    options.mode = mode || options.mode;
+    options.version = version || pkg.version.substr(0, pkg.version.length - '-SNAPSHOT'.length);
+
+    if (options.nextVersion === 'null-SNAPSHOT') {
+      grunt.fail.fatal('Failed to determine next development version ' +
+        'based on version (' + options.version.cyan +
+        ') and mode (' + options.mode.cyan + ')');
+    }
+    options.nextVersion = semver.inc(options.version, options.mode) + '-SNAPSHOT';
+    if (options.nextVersion === 'null-SNAPSHOT') {
+      grunt.fail.fatal('Failed to determine next development version ' +
+        'based on version (' + options.version.cyan +
+        ') and mode (' + options.mode.cyan + ')');
+    }
+
+    guaranteeFileName(options);
+    configureDestination(options, task);
+    configureMaven(options, task);
+
+    grunt.task.run('maven:version:' + options.version,
+      'maven:package',
+      'maven:deploy-file',
+      'maven:version:' + options.nextVersion + ':deleteTag');
+  }
+
+  function guaranteeFileName(options) {
+    if (!options.file) {
+      options.file = options.artifactId + '-' + options.version + '.' + options.packaging;
+    }
+  }
+
+  function configureDestination(options, task) {
+    if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder === true) {
+      task.files = injectDestFolder(options.artifactId + '-' + options.version, task.files);
+    }
+  }
+
+  function configureMaven(options, task) {
+    grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
+    grunt.config.set('maven.package.files', task.files);
+    grunt.config.set('maven.deploy-file.options', options);
+  }
 
   grunt.registerTask('maven:package', function() {
     var compress = require('grunt-contrib-compress/tasks/lib/compress')(grunt);

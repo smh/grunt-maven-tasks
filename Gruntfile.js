@@ -16,11 +16,11 @@ module.exports = function(grunt) {
       all: [
         'Gruntfile.js',
         'tasks/**/*.js',
-        'test/**/*.js',
+        'test/**/*.js'
       ],
       options: {
-        jshintrc: '.jshintrc',
-      },
+        jshintrc: '.jshintrc'
+      }
     },
 
     // Unit tests.
@@ -30,8 +30,8 @@ module.exports = function(grunt) {
         ui: 'bdd',
         reporter: 'tap'
       },
-      all: ['test/**/*.js'],
-    },
+      all: ['test/**/*.js']
+    }
   });
 
   // These plugins provide necessary tasks.
