@@ -12,21 +12,39 @@ chai.use(require('chai-things'));
 
 var projectDir = path.join('/tmp', '/test-project');
 
-describe('maven:deploy', function() {
-  var pkg = { name: 'test-project', version: '1.0.0-SNAPSHOT' };
-  var initConfig = {
+var CONFIGS = {
+  DEPLOY: {
     maven: {
-      options: { groupId: 'test.project', type: 'war' },
-      deploy: {
-        options: { url: 'file://repo' },
-        files: [ { src: [ '**', '!node_modules/**' ] } ]
+      options: {
+        goal: 'deploy',
+        groupId: 'test.project',
+        url: 'file://repo',
+        type: 'war'
+      },
+      src: [ '**', '!node_modules/**' ]
+    }
+  },
+  RELEASE: {
+    maven: {
+      releaseA: {
+        options: {
+          goal: 'release',
+          groupId: 'test.project',
+          url: 'file://repo'
+        },
+        src: [ '**', '!node_modules/**' ]
       }
     }
-  };
+  }
+};
+
+describe('maven:deploy', function() {
+  var pkg = { name: 'test-project', version: '1.0.0-SNAPSHOT' };
+  var initConfig = CONFIGS.DEPLOY;
   before(function(done) {
     async.series([
       function(cb) { setupGruntProject(pkg, initConfig, cb); },
-      function(cb) { exec('grunt maven:deploy --no-color', done); }
+      function(cb) { exec('grunt maven --no-color', done); }
     ], done);
   });
   after(function(done) {
@@ -47,24 +65,16 @@ describe('maven:deploy', function() {
 });
 
 [true, false].forEach(function(withGit) {
-  testRelease('maven:release', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '1.1.0-SNAPSHOT', withGit: withGit });
-  testRelease('maven:release:2.0.0', { current: '1.0.0-SNAPSHOT', release: '2.0.0', next: '2.1.0-SNAPSHOT', withGit: withGit });
-  testRelease('maven:release:major', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '2.0.0-SNAPSHOT', withGit: withGit });
-  testRelease('maven:release:1.0.1:patch', { current: '1.0.0-SNAPSHOT', release: '1.0.1', next: '1.0.2-SNAPSHOT', withGit: withGit });
+  testRelease('maven:releaseA', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '1.1.0-SNAPSHOT', withGit: withGit });
+  testRelease('maven:releaseA:2.0.0', { current: '1.0.0-SNAPSHOT', release: '2.0.0', next: '2.1.0-SNAPSHOT', withGit: withGit });
+  testRelease('maven:releaseA:major', { current: '1.0.0-SNAPSHOT', release: '1.0.0', next: '2.0.0-SNAPSHOT', withGit: withGit });
+  testRelease('maven:releaseA:1.0.1:patch', { current: '1.0.0-SNAPSHOT', release: '1.0.1', next: '1.0.2-SNAPSHOT', withGit: withGit });
 });
 
 function testRelease(cmd, options) {
   describe(cmd + (options.withGit ? ' with git project' : ''), function() {
     var pkg = { name: 'test-project', version: options.current };
-    var initConfig = {
-      maven: {
-        options: { groupId: 'test.project' },
-        release: {
-          options: { url: 'file://repo' },
-          files: [ { src: [ '**', '!node_modules/**' ] } ]
-        }
-      }
-    };
+    var initConfig = CONFIGS.RELEASE;
     before(function(done) {
       async.series([
         function(cb) { setupGruntProject(pkg, initConfig, options.withGit, cb); },
@@ -119,7 +129,7 @@ function exec(command, fn) {
 }
 
 function verifyDeployedFiles(groupId, artifactId, version, packaging, url, repositoryId, type) {
-  var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, 'deploy-file.json')));
+  var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, artifactId + '-deploy.json')));
   deploy.should.have.property('file', artifactId + '-' + version + '.' + packaging);
   deploy.should.have.property('groupId', groupId);
   deploy.should.have.property('artifactId', artifactId);
@@ -140,7 +150,8 @@ function gruntfile(initConfig) {
          '  grunt.initConfig(' + JSON.stringify(initConfig) + ');\n' +
          '  grunt.loadTasks("' + path.join(__dirname, '..', 'tasks') + '")\n' +
          '  grunt.registerTask("maven:deploy-file", function() {\n' +
-         '    fs.writeFileSync("deploy-file.json", JSON.stringify(grunt.config("maven.deploy-file.options")));\n' +
+         '    var options = grunt.config("maven.deploy-file.options");\n' +
+         '    fs.writeFileSync(options.artifactId + "-deploy.json", JSON.stringify(options));\n' +
          '  });\n' +
          '};\n';
 }

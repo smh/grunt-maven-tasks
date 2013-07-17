@@ -22,11 +22,13 @@ function injectDestFolder(targetPath, files) {
 module.exports = function(grunt) {
 
   grunt.registerMultiTask('maven', 'Packages and deploys artifact to maven repo', function(version, mode) {
-    requireOptionProps(this.options(), ['groupId', 'url']);
+    var options = this.options();
 
-    if (this.target === 'deploy') {
+    requireOptionProps(options, ['goal', 'groupId', 'url']);
+
+    if (options.goal === 'deploy') {
       deploy(this);
-    } else if (this.target === 'release') {
+    } else if (options.goal === 'release') {
       release(this, version, mode);
     }
   });
