@@ -40,8 +40,7 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       version: pkg.version,
-      packaging: 'zip',
-      debug: false
+      packaging: 'zip'
     });
 
     guaranteeFileName(options);
@@ -57,8 +56,7 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       packaging: 'zip',
-      mode: 'minor',
-      debug: false
+      mode: 'minor'
     });
 
     if (version && !mode && isValidMode(version)) {
@@ -131,11 +129,6 @@ module.exports = function(grunt) {
     args.push('-Dversion='      + options.version);
     args.push('-Durl='          + options.url);
 
-    if (options.debug) {
-      args.push('-X');
-      args.push('-e');
-    }
-
     if (options.repositoryId) {
       args.push('-DrepositoryId=' + options.repositoryId);
     }
@@ -147,6 +140,7 @@ module.exports = function(grunt) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to deploy to maven');
+        grunt.verbose.error(result.stdout);
       } else {
         grunt.verbose.ok();
         grunt.log.writeln('Deployed ' + options.file.cyan + ' to ' + options.url.cyan);
