@@ -133,6 +133,7 @@ module.exports = function(grunt) {
 
     if (options.debug) {
       args.push('-X');
+      args.push('-e');
     }
 
     if (options.repositoryId) {
