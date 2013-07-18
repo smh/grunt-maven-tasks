@@ -40,7 +40,8 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       version: pkg.version,
-      packaging: 'zip'
+      packaging: 'zip',
+      debug: false
     });
 
     guaranteeFileName(options);
@@ -56,7 +57,8 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       packaging: 'zip',
-      mode: 'minor'
+      mode: 'minor',
+      debug: false
     });
 
     if (version && !mode && isValidMode(version)) {
@@ -128,6 +130,11 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
     args.push('-Durl='          + options.url);
+
+    if (options.debug) {
+      args.push('-X');
+    }
+
     if (options.repositoryId) {
       args.push('-DrepositoryId=' + options.repositoryId);
     }
