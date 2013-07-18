@@ -128,6 +128,7 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
     args.push('-Durl='          + options.url);
+    args.push('-X');
 
     if (options.repositoryId) {
       args.push('-DrepositoryId=' + options.repositoryId);
