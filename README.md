@@ -64,9 +64,9 @@ grunt.initConfig({
 
 #### options.goal
 Type `String`
-Required
+Default: target name
 
-The maven goal for the target artifact. Valid values are 'deploy' and 'release'.
+The maven goal for the target artifact. Valid values are 'deploy' and 'release'. Defaults to the target name
 
 #### options.groupId
 Type: `String`
