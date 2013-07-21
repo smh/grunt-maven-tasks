@@ -19,6 +19,10 @@ maven: {
       type: 'war'
     },
     src: [ '**', '!node_modules/**' ],
+    install: {
+      options: {
+      }
+    },
     deploy: {
       options: {
         url: 'file://repo'
@@ -46,30 +50,14 @@ maven: {
 
 // test various deploy configurations
 ['deploy', 'deployWithGoal'].forEach(function(target) {
-  describe(target + ' -', function() {
-    var pkg = { name: 'test-project', version: '1.0.0-SNAPSHOT' };
-    before(function(done) {
-      async.series([
-        function(cb) { setupGruntProject(pkg, initConfig, cb); },
-        function(cb) { exec('grunt maven:' + target + ' --no-color', done); }
-      ], done);
-    });
-    after(function(done) {
-      rimraf(projectDir, done);
-    });
+  testDeploy(target, { name: 'test-project', version: '1.0.0-SNAPSHOT' });
+  testDeploy(target, { name: 'test-project', version: '1.0.0', classifier: 'javadoc' });
+});
 
-    it('should deploy artifact to repository', function() {
-      verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo');
-    });
-    it('should rename artifacts with war-extension when configured as a type', function() {
-      verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo', null, 'war');
-    });
-
-    it('should not touch package.json', function() {
-      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
-      readPkg.should.eql(pkg);
-    });
-  });
+// test various install configurations
+['install'].forEach(function(target) {
+  testInstall(target, { name: 'test-project', version: '1.0.0-SNAPSHOT' });
+  testInstall(target, { name: 'test-project', version: '1.0.0', classifier: 'javadoc' });
 });
 
 // test various release configurations, with and without git support
@@ -86,6 +74,68 @@ maven: {
   });
 });
 
+function testDeploy(target, pkg) {
+  describe(target + ' - ' + pkg.version + ':' + pkg.classifier + ' -', function() {
+    var effectiveConfig = initConfig;
+    if (pkg.classifier) {
+      effectiveConfig = JSON.parse(JSON.stringify(effectiveConfig)); // deep copy
+      effectiveConfig.maven[target].options.classifier = pkg.classifier;
+    }
+    before(function(done) {
+      async.series([
+        function(cb) { setupGruntProject(pkg, effectiveConfig, cb); },
+        function(cb) { exec('grunt maven:' + target + ' --no-color', done); }
+      ], done);
+    });
+    after(function(done) {
+      rimraf(projectDir, done);
+    });
+
+    it('should deploy artifact to repository', function() {
+      verifyDeployedFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip', 'file://repo');
+    });
+    it('should rename artifacts with war-extension when configured as a type', function() {
+      verifyDeployedFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip', 'file://repo', null, 'war');
+    });
+
+    it('should not touch package.json', function() {
+      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
+      readPkg.should.eql(pkg);
+    });
+  });
+}
+
+function testInstall(target, pkg) {
+  describe(target + ' - ' + pkg.version + ':' + pkg.classifier + ' -', function() {
+    var effectiveConfig = initConfig;
+    if (pkg.classifier) {
+      effectiveConfig = JSON.parse(JSON.stringify(effectiveConfig)); // deep copy
+      effectiveConfig.maven[target].options.classifier = pkg.classifier;
+    }
+    before(function(done) {
+      async.series([
+        function(cb) { setupGruntProject(pkg, effectiveConfig, cb); },
+        function(cb) { exec('grunt maven:' + target + ' --no-color', done); }
+      ], done);
+    });
+    after(function(done) {
+      rimraf(projectDir, done);
+    });
+
+    it('should install artifact to repository', function() {
+      verifyInstalledFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip');
+    });
+    it('should rename artifacts with war-extension when configured as a type', function() {
+      verifyInstalledFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip', null, 'war');
+    });
+
+    it('should not touch package.json', function() {
+      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
+      readPkg.should.eql(pkg);
+    });
+  });
+}
+
 function testRelease(cmd, options) {
   //describe(cmd + (options.withGit ? ' with git project' : ''), function() {
   describe(cmd + ' -', function() {
@@ -101,7 +151,7 @@ function testRelease(cmd, options) {
     });
 
     it('should deploy artifact to repository', function() {
-      verifyDeployedFiles('test.project', 'test-project', options.release, 'zip', 'file://repo');
+      verifyDeployedFiles('test.project', 'test-project', options.release, null, 'zip', 'file://repo');
     });
 
     it('should update package.json version to ' + options.next, function() {
@@ -143,14 +193,35 @@ function exec(command, fn) {
   });
 }
 
-function verifyDeployedFiles(groupId, artifactId, version, packaging, url, repositoryId, type) {
+function verifyDeployedFiles(groupId, artifactId, version, classifier, packaging, url, repositoryId, type) {
   var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, artifactId + '-deploy.json')));
-  deploy.should.have.property('file', artifactId + '-' + version + '.' + packaging);
+  deploy.should.have.property('file', artifactId + '-' + version + (classifier? '-' + classifier : '') + '.' + packaging);
   deploy.should.have.property('groupId', groupId);
   deploy.should.have.property('artifactId', artifactId);
   deploy.should.have.property('version', version);
+  if (classifier) {
+    deploy.should.have.property('classifier', classifier);
+  }
   deploy.should.have.property('packaging', packaging);
   deploy.should.have.property('url', url);
+  if (repositoryId) {
+    deploy.should.have.property('repositoryId', repositoryId);
+  }
+  if (type){
+    deploy.should.have.property('type', type);
+  }
+}
+
+function verifyInstalledFiles(groupId, artifactId, version, classifier, packaging, repositoryId, type) {
+  var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, artifactId + '-install.json')));
+  deploy.should.have.property('file', artifactId + '-' + version + (classifier? '-' + classifier : '') + '.' + packaging);
+  deploy.should.have.property('groupId', groupId);
+  deploy.should.have.property('artifactId', artifactId);
+  deploy.should.have.property('version', version);
+  if (classifier) {
+    deploy.should.have.property('classifier', classifier);
+  }
+  deploy.should.have.property('packaging', packaging);
   if (repositoryId) {
     deploy.should.have.property('repositoryId', repositoryId);
   }
@@ -167,6 +238,10 @@ function gruntfile(initConfig) {
          '  grunt.registerTask("maven:deploy-file", function() {\n' +
          '    var options = grunt.config("maven.deploy-file.options");\n' +
          '    fs.writeFileSync(options.artifactId + "-deploy.json", JSON.stringify(options));\n' +
+         '  });\n' +
+         '  grunt.registerTask("maven:install-file", function() {\n' +
+         '    var options = grunt.config("maven.install-file.options");\n' +
+         '    fs.writeFileSync(options.artifactId + "-install.json", JSON.stringify(options));\n' +
          '  });\n' +
          '};\n';
 }

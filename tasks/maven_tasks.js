@@ -24,16 +24,37 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('maven', 'Packages and deploys artifact to maven repo', function(version, mode) {
     var options = this.options();
 
-    requireOptionProps(options, ['groupId', 'url']);
+    requireOptionProps(options, ['groupId']);
 
     options.goal = options.goal || this.target;
+    options.commitPrefix = options.commitPrefix || '%s';
 
     if (options.goal === 'deploy') {
+      requireOptionProps(options, ['url']);
       deploy(this);
+    } else if (options.goal === 'install') {
+      install(this);
     } else if (options.goal === 'release') {
+      requireOptionProps(options, ['url']);
       release(this, version, mode);
     }
   });
+
+  function install(task) {
+    var pkg = grunt.file.readJSON('package.json');
+    var options = task.options({
+      artifactId: pkg.name,
+      version: pkg.version,
+      packaging: 'zip'
+    });
+
+    guaranteeFileName(options);
+    configureDestination(options, task);
+    configureMaven(options, task);
+
+    grunt.task.run('maven:package',
+      'maven:install-file');
+  }
 
   function deploy(task) {
     var pkg = grunt.file.readJSON('package.json');
@@ -89,28 +110,73 @@ module.exports = function(grunt) {
       'maven:version:' + options.nextVersion + ':deleteTag');
   }
 
+  function getFileNameBase(options) {
+	  return options.artifactId + '-' + options.version
+      + (options.classifier ? '-' + options.classifier : '');
+  }
+
   function guaranteeFileName(options) {
     if (!options.file) {
-      options.file = options.artifactId + '-' + options.version + '.' + options.packaging;
+      options.file = getFileNameBase(options) + '.' + options.packaging;
     }
   }
 
   function configureDestination(options, task) {
     if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder === true) {
-      task.files = injectDestFolder(options.artifactId + '-' + options.version, task.files);
+      task.files = injectDestFolder(getFileNameBase(options), task.files);
     }
+    grunt.config.set('grunt.maven.commitPrefix', options.commitPrefix);
   }
 
   function configureMaven(options, task) {
     grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
     grunt.config.set('maven.package.files', task.files);
     grunt.config.set('maven.deploy-file.options', options);
+    grunt.config.set('maven.install-file.options', options);
   }
 
   grunt.registerTask('maven:package', function() {
     var compress = require('grunt-contrib-compress/tasks/lib/compress')(grunt);
     compress.options = grunt.config('maven.package.options');
     compress.tar(grunt.config('maven.package.files'), this.async());
+  });
+
+  grunt.registerTask('maven:install-file', function() {
+    var options = grunt.config('maven.install-file.options');
+
+    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
+    if (options.packaging === 'war'){
+        options.file = renameForWarTypeArtifacts(options.file);
+    }
+
+    var args = [ 'install:install-file' ];
+    args.push('-Dfile='         + options.file);
+    args.push('-DgroupId='      + options.groupId);
+    args.push('-DartifactId='   + options.artifactId);
+    args.push('-Dpackaging='    + options.packaging);
+    args.push('-Dversion='      + options.version);
+    if (options.classifier) {
+    	args.push('-Dclassifier=' + options.classifier);
+    }
+    // The lack of a space after the -s is critical
+    // otherwise the path will be processed by maven incorrectly.
+    if (options.settingsXml) {
+      args.push('-s' + options.settingsXml);
+    }
+
+    var done = this.async();
+    var msg = 'Installing to maven...';
+    grunt.verbose.write(msg);
+    grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
+      if (err) {
+        grunt.verbose.or.write(msg);
+        grunt.log.error().error('Failed to install to maven');
+      } else {
+        grunt.verbose.ok();
+        grunt.log.writeln('Installed ' + options.file.cyan);
+      }
+      done(err);
+    });
   });
 
   grunt.registerTask('maven:deploy-file', function() {
@@ -127,17 +193,25 @@ module.exports = function(grunt) {
     args.push('-DartifactId='   + options.artifactId);
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
+    if (options.classifier) {
+    	args.push('-Dclassifier=' + options.classifier);
+    }
     args.push('-Durl='          + options.url);
     args.push('-X');
 
     if (options.repositoryId) {
       args.push('-DrepositoryId=' + options.repositoryId);
     }
+    if (options.settingsXml) {
+      // The lack of a space after the -s is critical
+      // otherwise the path will be processed by maven incorrectly.
+      args.push('-s' + options.settingsXml);
+    }
 
     var done = this.async();
     var msg = 'Deploying to maven...';
     grunt.verbose.write(msg);
-    grunt.util.spawn({ cmd: 'mvn', args: args }, function(err, result, code) {
+    grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to deploy to maven');
@@ -152,12 +226,13 @@ module.exports = function(grunt) {
 
   grunt.registerTask('maven:version', 'Bumps version', function(version, deleteTag) {
     var done = this.async();
+    var commitPrefix = grunt.config('grunt.maven.commitPrefix') || '';
 
 
     var msg = 'Bumping version to ' + version.cyan + '...';
     grunt.verbose.write(msg);
 
-    grunt.util.spawn({ cmd: 'npm', args: ['version', version] }, function(err, result, code) {
+    grunt.util.spawn({ cmd: 'npm', args: ['version', version, '-m', commitPrefix + '%s'] }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to bump version to ' + version.cyan);

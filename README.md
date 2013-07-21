@@ -1,6 +1,6 @@
 # grunt-maven-tasks
 
-> Grunt maven tasks - deploy and release articats to maven repository.
+> Grunt maven tasks - install artifacts locally or deploy and release articats to maven repository.
 
 ## Getting Started
 This plugin requires Grunt `~0.4.1`
@@ -21,7 +21,13 @@ grunt.loadNpmTasks('grunt-maven-tasks');
 
 ### no goal
 
-If no goal is specified, the goal will be set to the target name. This means that the target name must be either `deploy` or `release`. For more flexibility with the naming of your targets, and/or having multiple targets with the same goal, specify the goal explicitly.
+If no goal is specified, the goal will be set to the target name. This means that the target name must be one of `install`, `deploy` or `release`. For more flexibility with the naming of your targets, and/or having multiple targets with the same goal, specify the goal explicitly.
+
+### install
+
+_Run the `grunt maven` task with the `goal` option set to `install`._
+
+This tasks packages and installs an artifact to your local maven repository.
 
 ### deploy
 
@@ -64,9 +70,9 @@ grunt.initConfig({
 
 #### options.goal
 Type `String`
-Required
+Default: target name
 
-The maven goal for the target artifact. Valid values are 'deploy' and 'release'.
+The maven goal for the target artifact. Valid values are 'deploy' and 'release'. Defaults to the target name
 
 #### options.groupId
 Type: `String`
@@ -85,6 +91,12 @@ Type: `String`
 Default: version found in package.json
 
 The version to use when deploying to the maven repository
+
+#### options.classifier
+Type: `String`
+Optional
+
+The classifier to use when deploying to the maven repository
 
 #### options.mode
 Type: `String`
@@ -124,6 +136,12 @@ Type: `String`
 Optional
 
 Enables you to turn off the injection of destination folder inside your artifact allowing you to choose the structure you want by configuring the compress task.
+
+### options.commitPrefix
+Type: `String`
+Optional
+
+Prefix for the commit message when releasing.
 
 ### Files
 
