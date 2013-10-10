@@ -149,8 +149,6 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
 
-    grunt.verbose.write(args);
-
     var done = this.async();
     var msg = 'Installing to maven...';
     grunt.verbose.write(msg);
