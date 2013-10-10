@@ -19,6 +19,10 @@ maven: {
       type: 'war'
     },
     src: [ '**', '!node_modules/**' ],
+    install: {
+      options: {
+      }
+    },
     deploy: {
       options: {
         url: 'file://repo'
@@ -63,6 +67,34 @@ maven: {
     });
     it('should rename artifacts with war-extension when configured as a type', function() {
       verifyDeployedFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip', 'file://repo', null, 'war');
+    });
+
+    it('should not touch package.json', function() {
+      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
+      readPkg.should.eql(pkg);
+    });
+  });
+});
+
+// test various install configurations
+['install'].forEach(function(target) {
+  describe(target + ' -', function() {
+    var pkg = { name: 'test-project', version: '1.0.0-SNAPSHOT' };
+    before(function(done) {
+      async.series([
+        function(cb) { setupGruntProject(pkg, initConfig, cb); },
+        function(cb) { exec('grunt maven:' + target + ' --no-color', done); }
+      ], done);
+    });
+    after(function(done) {
+      rimraf(projectDir, done);
+    });
+
+    it('should install artifact to repository', function() {
+      verifyInstalledFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip');
+    });
+    it('should rename artifacts with war-extension when configured as a type', function() {
+      verifyInstalledFiles('test.project', 'test-project', '1.0.0-SNAPSHOT', 'zip',null, 'war');
     });
 
     it('should not touch package.json', function() {
@@ -159,6 +191,21 @@ function verifyDeployedFiles(groupId, artifactId, version, packaging, url, repos
   }
 }
 
+function verifyInstalledFiles(groupId, artifactId, version, packaging, repositoryId, type) {
+  var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, artifactId + '-install.json')));
+  deploy.should.have.property('file', artifactId + '-' + version + '.' + packaging);
+  deploy.should.have.property('groupId', groupId);
+  deploy.should.have.property('artifactId', artifactId);
+  deploy.should.have.property('version', version);
+  deploy.should.have.property('packaging', packaging);
+  if (repositoryId) {
+    deploy.should.have.property('repositoryId', repositoryId);
+  }
+  if (type){
+    deploy.should.have.property('type', type);
+  }
+}
+
 function gruntfile(initConfig) {
   return 'var fs = require("fs");\n' +
          'module.exports = function(grunt) {\n' +
@@ -167,6 +214,10 @@ function gruntfile(initConfig) {
          '  grunt.registerTask("maven:deploy-file", function() {\n' +
          '    var options = grunt.config("maven.deploy-file.options");\n' +
          '    fs.writeFileSync(options.artifactId + "-deploy.json", JSON.stringify(options));\n' +
+         '  });\n' +
+         '  grunt.registerTask("maven:install-file", function() {\n' +
+         '    var options = grunt.config("maven.install-file.options");\n' +
+         '    fs.writeFileSync(options.artifactId + "-install.json", JSON.stringify(options));\n' +
          '  });\n' +
          '};\n';
 }
