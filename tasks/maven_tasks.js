@@ -29,12 +29,12 @@ module.exports = function(grunt) {
     options.goal = options.goal || this.target;
 
     if (options.goal === 'deploy') {
-      requireOptionProps(options, ['url']);      
+      requireOptionProps(options, ['url']);
       deploy(this);
     } else if (options.goal === 'install') {
       install(this);
     } else if (options.goal === 'release') {
-      requireOptionProps(options, ['url']);            
+      requireOptionProps(options, ['url']);
       release(this, version, mode);
     }
   });
@@ -148,6 +148,8 @@ module.exports = function(grunt) {
     args.push('-DartifactId='   + options.artifactId);
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
+
+    grunt.verbose.write(args);
 
     var done = this.async();
     var msg = 'Installing to maven...';
