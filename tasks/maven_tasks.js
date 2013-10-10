@@ -24,16 +24,36 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('maven', 'Packages and deploys artifact to maven repo', function(version, mode) {
     var options = this.options();
 
-    requireOptionProps(options, ['groupId', 'url']);
+    requireOptionProps(options, ['groupId']);
 
     options.goal = options.goal || this.target;
 
     if (options.goal === 'deploy') {
+      requireOptionProps(options, ['url']);      
       deploy(this);
+    } else if (options.goal === 'install') {
+      install(this);
     } else if (options.goal === 'release') {
+      requireOptionProps(options, ['url']);            
       release(this, version, mode);
     }
   });
+
+  function install(task) {
+    var pkg = grunt.file.readJSON('package.json');
+    var options = task.options({
+      artifactId: pkg.name,
+      version: pkg.version,
+      packaging: 'zip'
+    });
+
+    guaranteeFileName(options);
+    configureDestination(options, task);
+    configureMaven(options, task);
+
+    grunt.task.run('maven:package',
+      'maven:install-file');
+  }
 
   function deploy(task) {
     var pkg = grunt.file.readJSON('package.json');
@@ -105,12 +125,43 @@ module.exports = function(grunt) {
     grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
     grunt.config.set('maven.package.files', task.files);
     grunt.config.set('maven.deploy-file.options', options);
+    grunt.config.set('maven.install-file.options', options);
   }
 
   grunt.registerTask('maven:package', function() {
     var compress = require('grunt-contrib-compress/tasks/lib/compress')(grunt);
     compress.options = grunt.config('maven.package.options');
     compress.tar(grunt.config('maven.package.files'), this.async());
+  });
+
+  grunt.registerTask('maven:install-file', function() {
+    var options = grunt.config('maven.install-file.options');
+
+    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
+    if (options.packaging === 'war'){
+        options.file = renameForWarTypeArtifacts(options.file);
+    }
+
+    var args = [ 'install:install-file' ];
+    args.push('-Dfile='         + options.file);
+    args.push('-DgroupId='      + options.groupId);
+    args.push('-DartifactId='   + options.artifactId);
+    args.push('-Dpackaging='    + options.packaging);
+    args.push('-Dversion='      + options.version);
+
+    var done = this.async();
+    var msg = 'Installing to maven...';
+    grunt.verbose.write(msg);
+    grunt.util.spawn({ cmd: 'mvn', args: args }, function(err, result, code) {
+      if (err) {
+        grunt.verbose.or.write(msg);
+        grunt.log.error().error('Failed to install to maven');
+      } else {
+        grunt.verbose.ok();
+        grunt.log.writeln('Installed ' + options.file.cyan);
+      }
+      done(err);
+    });
   });
 
   grunt.registerTask('maven:deploy-file', function() {
