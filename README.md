@@ -1,6 +1,6 @@
 # grunt-maven-tasks
 
-> Grunt maven tasks - deploy and release articats to maven repository.
+> Grunt maven tasks - install artifacts locally or deploy and release articats to maven repository.
 
 ## Getting Started
 This plugin requires Grunt `~0.4.1`
@@ -21,7 +21,13 @@ grunt.loadNpmTasks('grunt-maven-tasks');
 
 ### no goal
 
-If no goal is specified, the goal will be set to the target name. This means that the target name must be either `deploy` or `release`. For more flexibility with the naming of your targets, and/or having multiple targets with the same goal, specify the goal explicitly.
+If no goal is specified, the goal will be set to the target name. This means that the target name must be one of `install`, `deploy` or `release`. For more flexibility with the naming of your targets, and/or having multiple targets with the same goal, specify the goal explicitly.
+
+### install
+
+_Run the `grunt maven` task with the `goal` option set to `install`._
+
+This tasks packages and installs an artifact to your local maven repository.
 
 ### deploy
 
