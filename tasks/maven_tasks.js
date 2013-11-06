@@ -160,7 +160,7 @@ module.exports = function(grunt) {
     var done = this.async();
     var msg = 'Installing to maven...';
     grunt.verbose.write(msg);
-    grunt.util.spawn({ cmd: 'mvn', args: args }, function(err, result, code) {
+    grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to install to maven');
@@ -197,7 +197,7 @@ module.exports = function(grunt) {
     var done = this.async();
     var msg = 'Deploying to maven...';
     grunt.verbose.write(msg);
-    grunt.util.spawn({ cmd: 'mvn', args: args }, function(err, result, code) {
+    grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to deploy to maven');
