@@ -108,16 +108,21 @@ module.exports = function(grunt) {
       'maven:deploy-file',
       'maven:version:' + options.nextVersion + ':deleteTag');
   }
+  
+  function getFileNameBase(options) {
+	  return options.artifactId + '-' + options.version
+      + (options.classifier ? '-' + options.classifier : '');
+  }
 
   function guaranteeFileName(options) {
     if (!options.file) {
-      options.file = options.artifactId + '-' + options.version + '.' + options.packaging;
+      options.file = getFileNameBase(options) + '.' + options.packaging;
     }
   }
 
   function configureDestination(options, task) {
     if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder === true) {
-      task.files = injectDestFolder(options.artifactId + '-' + options.version, task.files);
+      task.files = injectDestFolder(getFileNameBase(options), task.files);
     }
   }
 
@@ -148,11 +153,14 @@ module.exports = function(grunt) {
     args.push('-DartifactId='   + options.artifactId);
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
+    if (options.classifier) {
+    	args.push('-Dclassifier=' + options.classifier);
+    }
 
     var done = this.async();
     var msg = 'Installing to maven...';
     grunt.verbose.write(msg);
-    grunt.util.spawn({ cmd: 'mvn', args: args }, function(err, result, code) {
+    grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to install to maven');
@@ -178,6 +186,9 @@ module.exports = function(grunt) {
     args.push('-DartifactId='   + options.artifactId);
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
+    if (options.classifier) {
+    	args.push('-Dclassifier=' + options.classifier);
+    }
     args.push('-Durl='          + options.url);
     if (options.repositoryId) {
       args.push('-DrepositoryId=' + options.repositoryId);
@@ -186,7 +197,7 @@ module.exports = function(grunt) {
     var done = this.async();
     var msg = 'Deploying to maven...';
     grunt.verbose.write(msg);
-    grunt.util.spawn({ cmd: 'mvn', args: args }, function(err, result, code) {
+    grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to deploy to maven');
