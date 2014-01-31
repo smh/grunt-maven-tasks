@@ -166,6 +166,7 @@ module.exports = function(grunt) {
     grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
+        grunt.log.error().error(args);
         grunt.log.error().error('Failed to install to maven');
       } else {
         grunt.verbose.ok();
