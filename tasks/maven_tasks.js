@@ -108,7 +108,7 @@ module.exports = function(grunt) {
       'maven:deploy-file',
       'maven:version:' + options.nextVersion + ':deleteTag');
   }
-  
+
   function getFileNameBase(options) {
 	  return options.artifactId + '-' + options.version
       + (options.classifier ? '-' + options.classifier : '');
@@ -156,6 +156,11 @@ module.exports = function(grunt) {
     if (options.classifier) {
     	args.push('-Dclassifier=' + options.classifier);
     }
+    // The lack of a space after the -s is critical
+    // otherwise the path will be processed by maven incorrectly.
+    if (options.settingsXml) {
+      args.push('-s' + options.settingsXml);
+    }
 
     var done = this.async();
     var msg = 'Installing to maven...';
@@ -192,6 +197,11 @@ module.exports = function(grunt) {
     args.push('-Durl='          + options.url);
     if (options.repositoryId) {
       args.push('-DrepositoryId=' + options.repositoryId);
+    }
+    if (options.settingsXml) {
+      // The lack of a space after the -s is critical
+      // otherwise the path will be processed by maven incorrectly.
+      args.push('-s' + options.settingsXml);
     }
 
     var done = this.async();
