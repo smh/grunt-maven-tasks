@@ -92,6 +92,12 @@ Default: version found in package.json
 
 The version to use when deploying to the maven repository
 
+#### options.classifier
+Type: `String`
+Optional
+
+The classifier to use when deploying to the maven repository
+
 #### options.mode
 Type: `String`
 Default: minor
