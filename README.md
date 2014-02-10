@@ -131,6 +131,12 @@ Optional
 
 Enables you to turn off the injection of destination folder inside your artifact allowing you to choose the structure you want by configuring the compress task.
 
+### options.commitPrefix
+Type: `String`
+Optional
+
+Prefix for the commit message when releasing.
+
 ### Files
 
 Files may be specified using any of the supported [Grunt file mapping formats](http://gruntjs.com/configuring-tasks#files).
