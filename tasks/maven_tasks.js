@@ -27,6 +27,7 @@ module.exports = function(grunt) {
     requireOptionProps(options, ['groupId']);
 
     options.goal = options.goal || this.target;
+    options.commitPrefix = options.commitPrefix || '%s';
 
     if (options.goal === 'deploy') {
       requireOptionProps(options, ['url']);
@@ -124,6 +125,7 @@ module.exports = function(grunt) {
     if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder === true) {
       task.files = injectDestFolder(getFileNameBase(options), task.files);
     }
+    grunt.config.set('grunt.maven.commitPrefix', options.commitPrefix);
   }
 
   function configureMaven(options, task) {
@@ -221,12 +223,13 @@ module.exports = function(grunt) {
 
   grunt.registerTask('maven:version', 'Bumps version', function(version, deleteTag) {
     var done = this.async();
+    var commitPrefix = grunt.config('grunt.maven.commitPrefix');
 
 
     var msg = 'Bumping version to ' + version.cyan + '...';
     grunt.verbose.write(msg);
 
-    grunt.util.spawn({ cmd: 'npm', args: ['version', version] }, function(err, result, code) {
+    grunt.util.spawn({ cmd: 'npm', args: ['version', version, '-m', commitPrefix + '%s'] }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to bump version to ' + version.cyan);
