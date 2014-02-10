@@ -223,7 +223,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('maven:version', 'Bumps version', function(version, deleteTag) {
     var done = this.async();
-    var commitPrefix = grunt.config('grunt.maven.commitPrefix');
+    var commitPrefix = grunt.config('grunt.maven.commitPrefix') || '';
 
 
     var msg = 'Bumping version to ' + version.cyan + '...';
