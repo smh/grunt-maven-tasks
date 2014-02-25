@@ -197,6 +197,8 @@ module.exports = function(grunt) {
     	args.push('-Dclassifier=' + options.classifier);
     }
     args.push('-Durl='          + options.url);
+    args.push('-X');
+
     if (options.repositoryId) {
       args.push('-DrepositoryId=' + options.repositoryId);
     }
@@ -213,6 +215,7 @@ module.exports = function(grunt) {
       if (err) {
         grunt.verbose.or.write(msg);
         grunt.log.error().error('Failed to deploy to maven');
+        grunt.verbose.error(result.stdout);
       } else {
         grunt.verbose.ok();
         grunt.log.writeln('Deployed ' + options.file.cyan + ' to ' + options.url.cyan);
