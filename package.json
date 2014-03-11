@@ -1,7 +1,7 @@
 {
   "name": "grunt-maven-tasks",
   "description": "Grunt plugin to deploy a file to a maven repository",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "homepage": "https://github.com/smh/grunt-maven-tasks",
   "author": {
     "name": "Stein Martin Hustad",
