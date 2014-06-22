@@ -2,6 +2,7 @@
  node_js:
    - "0.10"
    - "0.8"
- before_script:
+ before_install:
   - npm update -g npm
+ before_script:
   - npm install -g grunt-cli
