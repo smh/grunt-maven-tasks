@@ -144,10 +144,7 @@ module.exports = function(grunt) {
   grunt.registerTask('maven:install-file', function() {
     var options = grunt.config('maven.install-file.options');
 
-    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
-    if (options.packaging === 'war'){
-        options.file = renameForWarTypeArtifacts(options.file);
-    }
+    options.file = renameForKnownPackageTypeArtifacts(options.file, options.packaging);
 
     var args = [ 'install:install-file' ];
     args.push('-Dfile='         + options.file);
@@ -182,10 +179,7 @@ module.exports = function(grunt) {
   grunt.registerTask('maven:deploy-file', function() {
     var options = grunt.config('maven.deploy-file.options');
 
-    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
-    if (options.packaging === 'war'){
-        options.file = renameForWarTypeArtifacts(options.file);
-    }
+    options.file = renameForKnownPackageTypeArtifacts(options.file, options.packaging);
 
     var args = [ 'deploy:deploy-file' ];
     args.push('-Dfile='         + options.file);
@@ -290,13 +284,19 @@ module.exports = function(grunt) {
     }
   }
 
-  function renameForWarTypeArtifacts(filename) {
-    var warFileName = filename.replace('zip', 'war');
-    try {
-      fs.renameSync(filename, warFileName);
-      return warFileName;
-    } catch (e) {
-      throw e;
-    }
+  function renameForKnownPackageTypeArtifacts(fileName) {
+
+      if (options.packaging === 'war') {
+          fileName = filename.replace('zip', 'war');
+      } else if (options.packaging === 'jar') {
+          fileName = filename.replace('zip', 'jar');
+      }
+
+      try {
+          fs.renameSync(filename, fileName);
+          return fileName;
+      } catch (e) {
+          throw e;
+      }
   }
 };
