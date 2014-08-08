@@ -111,8 +111,7 @@ module.exports = function(grunt) {
   }
 
   function getFileNameBase(options) {
-	  return options.artifactId + '-' + options.version
-      + (options.classifier ? '-' + options.classifier : '');
+      return options.artifactId + '-' + options.version + (options.classifier ? '-' + options.classifier : '');
   }
 
   function guaranteeFileName(options) {
@@ -154,7 +153,7 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
     if (options.classifier) {
-    	args.push('-Dclassifier=' + options.classifier);
+        args.push('-Dclassifier=' + options.classifier);
     }
     // The lack of a space after the -s is critical
     // otherwise the path will be processed by maven incorrectly.
@@ -190,7 +189,7 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
     if (options.classifier) {
-    	args.push('-Dclassifier=' + options.classifier);
+        args.push('-Dclassifier=' + options.classifier);
     }
     args.push('-Durl='          + options.url);
     if (options.repositoryId) {
