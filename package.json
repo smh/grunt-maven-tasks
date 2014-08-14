@@ -28,21 +28,21 @@
     "test": "grunt test"
   },
   "dependencies": {
-    "semver": "~1.1.4",
-    "grunt-contrib-compress": "~0.4.5"
+    "semver": "~2.3.1",
+    "grunt-contrib-compress": "~0.7.0"
   },
   "devDependencies": {
-    "mocha": "~1.8.2",
-    "async": "~0.2.6",
-    "chai": "~1.5.0",
-    "chai-things": "~0.1.1",
-    "rimraf": "~2.1.4",
-    "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.1.1",
+    "mocha": "~1.21.4",
+    "async": "~0.9.0",
+    "chai": "~1.9.1",
+    "chai-things": "~0.2.0",
+    "rimraf": "~2.2.8",
+    "grunt": "~0.4.5",
+    "grunt-contrib-jshint": "~0.10.0",
     "grunt-simple-mocha": "git://github.com/yaymukund/grunt-simple-mocha.git#7d1cb9bfd8580fc5369bd82e288f683bb7ca0d46"
   },
   "peerDependencies": {
-    "grunt": "~0.4.1"
+    "grunt": "~0.4.5"
   },
   "keywords": [
     "gruntplugin",
