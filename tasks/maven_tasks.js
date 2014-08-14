@@ -143,10 +143,8 @@ module.exports = function(grunt) {
   grunt.registerTask('maven:install-file', function() {
     var options = grunt.config('maven.install-file.options');
 
-    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
-    if (options.packaging === 'war'){
-        options.file = renameForWarTypeArtifacts(options.file);
-    }
+    options.packaging = (options.type === 'war' || options.type === 'jar') ? options.type : options.packaging;
+    options.file = renameForKnownPackageTypeArtifacts(options.file, options.packaging);
 
     var args = [ 'install:install-file' ];
     args.push('-Dfile='         + options.file);
@@ -155,7 +153,7 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
     if (options.classifier) {
-       args.push('-Dclassifier=' + options.classifier);
+      args.push('-Dclassifier=' + options.classifier);
     }
     // The lack of a space after the -s is critical
     // otherwise the path will be processed by maven incorrectly.
@@ -181,10 +179,8 @@ module.exports = function(grunt) {
   grunt.registerTask('maven:deploy-file', function() {
     var options = grunt.config('maven.deploy-file.options');
 
-    options.packaging = (options.type === 'war') ? 'war' : options.packaging;
-    if (options.packaging === 'war'){
-        options.file = renameForWarTypeArtifacts(options.file);
-    }
+    options.packaging = (options.type === 'war' || options.type === 'jar') ? options.type : options.packaging;
+    options.file = renameForKnownPackageTypeArtifacts(options.file, options.packaging);
 
     var args = [ 'deploy:deploy-file' ];
     args.push('-Dfile='         + options.file);
@@ -289,13 +285,20 @@ module.exports = function(grunt) {
     }
   }
 
-  function renameForWarTypeArtifacts(filename) {
-    var warFileName = filename.replace('zip', 'war');
-    try {
-      fs.renameSync(filename, warFileName);
-      return warFileName;
-    } catch (e) {
-      throw e;
-    }
+  function renameForKnownPackageTypeArtifacts(fileName, packaging) {
+
+      var newFileName = fileName;
+      if (packaging === 'war') {
+          newFileName = fileName.replace('zip', 'war');
+      } else if (packaging === 'jar') {
+          newFileName = fileName.replace('zip', 'jar');
+      }
+
+      try {
+          fs.renameSync(fileName, newFileName);
+          return newFileName;
+      } catch (e) {
+          throw e;
+      }
   }
 };
