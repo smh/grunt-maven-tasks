@@ -68,6 +68,12 @@ grunt.initConfig({
 
 ### Options
 
+#### options.versionFile
+Type `String`
+Default: package.json
+
+Identifies the file that contains the version file to read.  (E.G. bower.json)
+
 #### options.goal
 Type `String`
 Default: target name
@@ -88,7 +94,7 @@ The maven artifact id to use when deploying and artifact
 
 #### options.version
 Type: `String`
-Default: version found in package.json
+Default: version found in package.json or the file specified by options.versionFile
 
 The version to use when deploying to the maven repository
 
