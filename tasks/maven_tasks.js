@@ -29,19 +29,20 @@ module.exports = function(grunt) {
     options.goal = options.goal || this.target;
     options.commitPrefix = options.commitPrefix || '%s';
 
+    var pkg = grunt.file.readJSON(options.versionFile || 'package.json');
+
     if (options.goal === 'deploy') {
       requireOptionProps(options, ['url']);
-      deploy(this);
+      deploy(this, pkg);
     } else if (options.goal === 'install') {
-      install(this);
+      install(this, pkg);
     } else if (options.goal === 'release') {
       requireOptionProps(options, ['url']);
-      release(this, version, mode);
+      release(this, pkg, version, mode);
     }
   });
 
-  function install(task) {
-    var pkg = grunt.file.readJSON('package.json');
+  function install(task, pkg) {
     var options = task.options({
       artifactId: pkg.name,
       version: pkg.version,
@@ -56,8 +57,7 @@ module.exports = function(grunt) {
       'maven:install-file');
   }
 
-  function deploy(task) {
-    var pkg = grunt.file.readJSON('package.json');
+  function deploy(task, pkg) {
     var options = task.options({
       artifactId: pkg.name,
       version: pkg.version,
@@ -72,8 +72,7 @@ module.exports = function(grunt) {
       'maven:deploy-file');
   }
 
-  function release(task, version, mode) {
-    var pkg = grunt.file.readJSON('package.json');
+  function release(task, pkg, version, mode) {
     var options = task.options({
       artifactId: pkg.name,
       packaging: 'zip',
@@ -111,8 +110,8 @@ module.exports = function(grunt) {
   }
 
   function getFileNameBase(options) {
-	  return options.artifactId + '-' + options.version
-      + (options.classifier ? '-' + options.classifier : '');
+    return options.artifactId + '-' + options.version +
+      (options.classifier ? '-' + options.classifier : '');
   }
 
   function guaranteeFileName(options) {
@@ -156,7 +155,7 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
     if (options.classifier) {
-    	args.push('-Dclassifier=' + options.classifier);
+       args.push('-Dclassifier=' + options.classifier);
     }
     // The lack of a space after the -s is critical
     // otherwise the path will be processed by maven incorrectly.
@@ -194,7 +193,7 @@ module.exports = function(grunt) {
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
     if (options.classifier) {
-    	args.push('-Dclassifier=' + options.classifier);
+      args.push('-Dclassifier=' + options.classifier);
     }
     args.push('-Durl='          + options.url);
     if (options.repositoryId) {

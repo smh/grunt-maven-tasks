@@ -23,6 +23,12 @@ maven: {
       options: {
       }
     },
+    installBower: {
+      options: {
+        goal: 'install',
+        versionFile: 'bower.json'
+      }
+    },
     deploy: {
       options: {
         url: 'file://repo'
@@ -32,6 +38,13 @@ maven: {
       options: {
         goal: 'deploy',
         url: 'file://repo'
+      }
+    },
+    deployBower: {
+      options: {
+        goal: 'deploy',
+        url: 'file://repo',
+        versionFile: 'bower.json'
       }
     },
     release: {
@@ -50,14 +63,14 @@ maven: {
 
 // test various deploy configurations
 ['deploy', 'deployWithGoal'].forEach(function(target) {
-  testDeploy(target, { name: 'test-project', version: '1.0.0-SNAPSHOT' });
-  testDeploy(target, { name: 'test-project', version: '1.0.0', classifier: 'javadoc' });
+  testDeploy(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT' });
+  testDeploy(target, 'package.json', { name: 'test-project', version: '1.0.0', classifier: 'javadoc' });
 });
 
 // test various install configurations
 ['install'].forEach(function(target) {
-  testInstall(target, { name: 'test-project', version: '1.0.0-SNAPSHOT' });
-  testInstall(target, { name: 'test-project', version: '1.0.0', classifier: 'javadoc' });
+  testInstall(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT' });
+  testInstall(target, 'package.json', { name: 'test-project', version: '1.0.0', classifier: 'javadoc' });
 });
 
 // test various release configurations, with and without git support
@@ -74,7 +87,15 @@ maven: {
   });
 });
 
-function testDeploy(target, pkg) {
+// Test bower targets
+['deployBower'].forEach(function(target) {
+  testDeploy(target, 'bower.json', { name: 'test-project', version: '1.0.0-SNAPSHOT' });
+});
+['installBower'].forEach(function(target) {
+  testInstall(target, 'bower.json', { name: 'test-project', version: '1.0.0-SNAPSHOT' });
+});
+
+function testDeploy(target, versionFile, pkg) {
   describe(target + ' - ' + pkg.version + ':' + pkg.classifier + ' -', function() {
     var effectiveConfig = initConfig;
     if (pkg.classifier) {
@@ -83,7 +104,7 @@ function testDeploy(target, pkg) {
     }
     before(function(done) {
       async.series([
-        function(cb) { setupGruntProject(pkg, effectiveConfig, cb); },
+        function(cb) { setupGruntProject(versionFile, pkg, effectiveConfig, cb); },
         function(cb) { exec('grunt maven:' + target + ' --no-color', done); }
       ], done);
     });
@@ -99,13 +120,13 @@ function testDeploy(target, pkg) {
     });
 
     it('should not touch package.json', function() {
-      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
+      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, versionFile)));
       readPkg.should.eql(pkg);
     });
   });
 }
 
-function testInstall(target, pkg) {
+function testInstall(target, versionFile, pkg) {
   describe(target + ' - ' + pkg.version + ':' + pkg.classifier + ' -', function() {
     var effectiveConfig = initConfig;
     if (pkg.classifier) {
@@ -114,7 +135,7 @@ function testInstall(target, pkg) {
     }
     before(function(done) {
       async.series([
-        function(cb) { setupGruntProject(pkg, effectiveConfig, cb); },
+        function(cb) { setupGruntProject(versionFile, pkg, effectiveConfig, cb); },
         function(cb) { exec('grunt maven:' + target + ' --no-color', done); }
       ], done);
     });
@@ -130,7 +151,7 @@ function testInstall(target, pkg) {
     });
 
     it('should not touch package.json', function() {
-      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json')));
+      var readPkg = JSON.parse(fs.readFileSync(path.join(projectDir, versionFile)));
       readPkg.should.eql(pkg);
     });
   });
@@ -142,7 +163,7 @@ function testRelease(cmd, options) {
     var pkg = { name: 'test-project', version: options.current };
     before(function(done) {
       async.series([
-        function(cb) { setupGruntProject(pkg, initConfig, options.withGit, cb); },
+        function(cb) { setupGruntProject('package.json', pkg, initConfig, options.withGit, cb); },
         function(cb) { exec('grunt --no-color ' + cmd, done); }
       ], done);
     });
@@ -246,7 +267,7 @@ function gruntfile(initConfig) {
          '};\n';
 }
 
-function setupGruntProject(pkg, initConfig, useGit, fn) {
+function setupGruntProject(versionFile, pkg, initConfig, useGit, fn) {
   if (!fn) {
     fn = useGit;
     useGit = false;
@@ -254,7 +275,7 @@ function setupGruntProject(pkg, initConfig, useGit, fn) {
   var commands = [
     function(cb) { rimraf(projectDir, cb); },
     function(cb) { fs.mkdir(projectDir, cb); },
-    function(cb) { fs.writeFile(path.join(projectDir, 'package.json'), JSON.stringify(pkg), cb); },
+    function(cb) { fs.writeFile(path.join(projectDir, versionFile), JSON.stringify(pkg), cb); },
     function(cb) { fs.writeFile(path.join(projectDir, 'Gruntfile.js'), gruntfile(initConfig), cb); },
     function(cb) { fs.writeFile(path.join(projectDir, 'somefile.txt'), 'somedata', cb); },
     function(cb) { exec('ln -s ' + path.join(__dirname, '..', 'node_modules'), cb); }
