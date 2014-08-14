@@ -8,7 +8,6 @@
   "nonew":     true,
   "trailing":  true,
   "immed":     true,
-  "es5":       true,
   "node":      true,
   "predef": [
     "describe",
