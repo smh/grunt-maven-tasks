@@ -72,11 +72,12 @@ module.exports = function(grunt) {
       'maven:deploy-file');
   }
 
-  function release(task, pkg, version, mode) {
+  function release(task, pkg, version, mode,gitpush) {
     var options = task.options({
       artifactId: pkg.name,
       packaging: 'zip',
-      mode: 'minor'
+      mode: 'minor',
+      gitpush: false
     });
 
     if (version && !mode && isValidMode(version)) {
@@ -84,6 +85,7 @@ module.exports = function(grunt) {
       version = null;
     }
 
+    options.gitpush = isGitPush(gitpush);
     options.mode = mode || options.mode;
     options.version = version || pkg.version.substr(0, pkg.version.length - '-SNAPSHOT'.length);
 
@@ -106,7 +108,7 @@ module.exports = function(grunt) {
     grunt.task.run('maven:version:' + options.version,
       'maven:package',
       'maven:deploy-file',
-      'maven:version:' + options.nextVersion + ':deleteTag');
+      'maven:version:' + options.nextVersion + ':deleteTag'  + ':' + options.gitpush);
   }
 
   function getFileNameBase(options) {
@@ -216,7 +218,7 @@ module.exports = function(grunt) {
     });
   });
 
-  grunt.registerTask('maven:version', 'Bumps version', function(version, deleteTag) {
+  grunt.registerTask('maven:version', 'Bumps version', function(version, deleteTag,gitpush) {
     var done = this.async();
     var commitPrefix = grunt.config('grunt.maven.commitPrefix') || '';
 
@@ -244,6 +246,10 @@ module.exports = function(grunt) {
             } else {
               grunt.verbose.ok();
               grunt.log.writeln('Deleted tag ' + ('v' + version).cyan);
+                if(gitpush){
+                    gitPush();
+                    grunt.log.writeln('Pushed new version commit to remote');
+                }
             }
             done(err);
           });
@@ -260,10 +266,24 @@ module.exports = function(grunt) {
     });
   }
 
+  function gitPush(fn) {
+    grunt.util.spawn({ cmd: 'git', args: ['push'] }, function(err, result, code) {
+      fn(!err);
+    });
+  }
+
   function isValidMode(mode) {
     var validModes = ['major', 'minor', 'patch', 'build'].join('|');
 
     return mode.indexOf('|') < 0 && validModes.indexOf(mode) >=0;
+  }
+
+  function isGitPush(gitpush){
+    if ('null' != gitpush){
+      return gitpush;
+    }else{
+      return false;
+    }
   }
 
   function requireOptionProps(options, props) {
