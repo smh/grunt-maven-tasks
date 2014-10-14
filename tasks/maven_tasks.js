@@ -76,7 +76,8 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       packaging: 'zip',
-      mode: 'minor'
+      mode: 'minor',
+      gitpush: false
     });
 
     if (version && !mode && isValidMode(version)) {
@@ -103,10 +104,19 @@ module.exports = function(grunt) {
     configureDestination(options, task);
     configureMaven(options, task);
 
-    grunt.task.run('maven:version:' + options.version,
+    grunt.task.run(
+      'maven:version:' + options.version,
       'maven:package',
       'maven:deploy-file',
-      'maven:version:' + options.nextVersion + ':deleteTag');
+      'maven:version:' + options.nextVersion + ':deleteTag'
+    );
+
+    if (options.gitpush) {
+      grunt.task.run(
+        'maven:gitpush'
+      );
+    }
+
   }
 
   function getFileNameBase(options) {
@@ -230,33 +240,57 @@ module.exports = function(grunt) {
         grunt.log.error().error('Failed to bump version to ' + version.cyan);
         return done(err);
       }
+
       grunt.verbose.ok();
       grunt.log.writeln('Version bumped to ' + version.cyan);
-      if (deleteTag) {
-        isGitRepo(function(isGit) {
-          if (!isGit) { return done(); }
-          msg = 'Deleting tag v' + version.cyan + '...';
-          grunt.verbose.write(msg);
-          grunt.util.spawn({ cmd: 'git', args: ['tag', '-d', 'v' + version] }, function(err, result, code) {
-            if (err) {
-              grunt.verbose.or.write(msg);
-              grunt.log.error().error('Failed to delete tag ' + ('v' + version).cyan);
-            } else {
-              grunt.verbose.ok();
-              grunt.log.writeln('Deleted tag ' + ('v' + version).cyan);
-            }
-            done(err);
-          });
-        });
-      } else {
-        done();
+
+      if (!deleteTag) {
+        return done();
       }
+
+      isGitRepo(function(isGit) {
+        if (!isGit) { return done(); }
+        msg = 'Deleting tag v' + version.cyan + '...';
+        grunt.verbose.write(msg);
+        grunt.util.spawn({ cmd: 'git', args: ['tag', '-d', 'v' + version] }, function(err, result, code) {
+          if (err) {
+            grunt.verbose.or.write(msg);
+            grunt.log.error().error('Failed to delete tag ' + ('v' + version).cyan);
+          }
+
+          grunt.verbose.ok();
+          grunt.log.writeln('Deleted tag ' + ('v' + version).cyan);
+
+          done(err);
+        });
+      });
+    });
+  });
+
+  grunt.registerTask('maven:gitpush', 'Pushes to git', function() {
+    var done = this.async();
+
+    grunt.verbose.write('Pushing to git');
+
+    gitPush(function(err) {
+      if (err) {
+        grunt.log.error().error('Failed to push new version to remote');
+      } else {
+        grunt.log.writeln('Pushed new version to remote');
+      }
+      done(err);
     });
   });
 
   function isGitRepo(fn) {
     grunt.util.spawn({ cmd: 'git', args: ['status', '--porcelain'] }, function(err, result, code) {
       fn(!err);
+    });
+  }
+
+  function gitPush(fn) {
+    grunt.util.spawn({ cmd: 'git', args: ['push'] }, function(err, result, code) {
+      fn(err);
     });
   }
 
