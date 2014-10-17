@@ -149,6 +149,13 @@ Optional
 
 Prefix for the commit message when releasing.
 
+### options.gitpush
+Type: `Boolean`
+Optional
+Default: false
+
+If `true`, runs git push after updating the `package.json` with the next version.
+
 ### Files
 
 Files may be specified using any of the supported [Grunt file mapping formats](http://gruntjs.com/configuring-tasks#files).
