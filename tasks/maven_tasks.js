@@ -210,6 +210,12 @@ module.exports = function(grunt) {
       // otherwise the path will be processed by maven incorrectly.
       args.push('-s' + options.settingsXml);
     }
+    if (grunt.debug || options.debug) {
+      args.push('-X');
+    }
+    if (grunt.debug || options.debug) {
+      args.push('-X');
+    }
 
     var done = this.async();
     var msg = 'Deploying to maven...';
