@@ -178,6 +178,7 @@ module.exports = function(grunt) {
     var done = this.async();
     var msg = 'Installing to maven...';
     grunt.verbose.write(msg);
+    grunt.log.debug('Running command "mvn ' + args.join(' ') + '"');
     grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
@@ -222,6 +223,7 @@ module.exports = function(grunt) {
     var done = this.async();
     var msg = 'Deploying to maven...';
     grunt.verbose.write(msg);
+    grunt.log.debug('Running command "mvn ' + args.join(' ') + '"');
     grunt.util.spawn({ cmd: 'mvn', args: args, opts: {stdio: 'inherit'} }, function(err, result, code) {
       if (err) {
         grunt.verbose.or.write(msg);
