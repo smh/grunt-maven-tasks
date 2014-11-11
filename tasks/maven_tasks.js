@@ -170,6 +170,10 @@ module.exports = function(grunt) {
     if (options.settingsXml) {
       args.push('-s' + options.settingsXml);
     }
+    if (grunt.debug || options.debug) {
+      args.push('-e');
+      args.push('-X');
+    }
 
     var done = this.async();
     var msg = 'Installing to maven...';
@@ -211,9 +215,7 @@ module.exports = function(grunt) {
       args.push('-s' + options.settingsXml);
     }
     if (grunt.debug || options.debug) {
-      args.push('-X');
-    }
-    if (grunt.debug || options.debug) {
+      args.push('-e');
       args.push('-X');
     }
 
