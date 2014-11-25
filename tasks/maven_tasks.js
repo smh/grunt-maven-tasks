@@ -132,7 +132,8 @@ module.exports = function(grunt) {
 
   function configureDestination(options, task) {
     if (typeof options.injectDestFolder === 'undefined' || options.injectDestFolder === true) {
-      task.files = injectDestFolder(getFileNameBase(options), task.files);
+      var fileNameBase = options.destFolder ? options.destFolder : getFileNameBase(options);
+      task.files = injectDestFolder(fileNameBase, task.files);
     }
     grunt.config.set('grunt.maven.commitPrefix', options.commitPrefix);
   }
