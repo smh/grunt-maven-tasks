@@ -143,6 +143,12 @@ Optional
 
 Enables you to turn off the injection of destination folder inside your artifact allowing you to choose the structure you want by configuring the compress task.
 
+### options.destFolder
+Type: `String`
+Optional
+
+Specifies the name of the folder to be injected inside the artifact. If not specified, this will be auto-generated.
+
 ### options.commitPrefix
 Type: `String`
 Optional
