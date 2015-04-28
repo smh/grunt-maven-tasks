@@ -171,6 +171,11 @@ module.exports = function(grunt) {
     if (options.settingsXml) {
       args.push('-s' + options.settingsXml);
     }
+    if (options.unsecure){
+      args.push('-Dmaven.wagon.http.ssl.insecure='+options.insecure);
+      args.push('-Dmaven.wagon.http.ssl.allowall='+options.insecure);
+    }
+
     if (grunt.debug || options.debug) {
       args.push('-e');
       args.push('-X');
