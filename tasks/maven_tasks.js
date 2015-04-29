@@ -168,7 +168,7 @@ module.exports = function(grunt) {
     }
     // The lack of a space after the -s is critical
     // otherwise the path will be processed by maven incorrectly.
-    if (options.settingsXml){
+    if (options.settingsXml) {
       args.push('-s' + options.settingsXml);
     }
 
