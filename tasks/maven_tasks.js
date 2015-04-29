@@ -168,9 +168,10 @@ module.exports = function(grunt) {
     }
     // The lack of a space after the -s is critical
     // otherwise the path will be processed by maven incorrectly.
-    if (options.settingsXml) {
+    if (options.settingsXml){
       args.push('-s' + options.settingsXml);
     }
+
     if (grunt.debug || options.debug) {
       args.push('-e');
       args.push('-X');
@@ -204,6 +205,10 @@ module.exports = function(grunt) {
     args.push('-DartifactId='   + options.artifactId);
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
+    if (options.unsecure){
+      args.push('-Dmaven.wagon.http.ssl.insecure='+options.unsecure);
+      args.push('-Dmaven.wagon.http.ssl.allowall='+options.unsecure);
+    }
     if (options.classifier) {
       args.push('-Dclassifier=' + options.classifier);
     }
