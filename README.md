@@ -161,6 +161,9 @@ Optional
 Default: false
 
 If `true`, runs git push after updating the `package.json` with the next version.
+### options.unsecure
+Type: `Boolean`
+Optional
 
 ### Files
 
