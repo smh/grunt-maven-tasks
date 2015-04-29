@@ -171,7 +171,6 @@ module.exports = function(grunt) {
     if (options.settingsXml) {
       args.push('-s' + options.settingsXml);
     }
-
     if (grunt.debug || options.debug) {
       args.push('-e');
       args.push('-X');
