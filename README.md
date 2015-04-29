@@ -165,6 +165,7 @@ If `true`, runs git push after updating the `package.json` with the next version
 Type: `Boolean`
 Optional
 
+If `true`, runs maven with `-Dmaven.wagon.http.ssl.insecure=true` and `-Dmaven.wagon.http.ssl.allowall=true`
 ### Files
 
 Files may be specified using any of the supported [Grunt file mapping formats](http://gruntjs.com/configuring-tasks#files).
