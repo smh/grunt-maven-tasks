@@ -204,6 +204,10 @@ module.exports = function(grunt) {
     args.push('-DartifactId='   + options.artifactId);
     args.push('-Dpackaging='    + options.packaging);
     args.push('-Dversion='      + options.version);
+    if (options.unsecure){
+      args.push('-Dmaven.wagon.http.ssl.insecure='+options.unsecure);
+      args.push('-Dmaven.wagon.http.ssl.allowall='+options.unsecure);
+    }
     if (options.classifier) {
       args.push('-Dclassifier=' + options.classifier);
     }
