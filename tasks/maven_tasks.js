@@ -86,7 +86,12 @@ module.exports = function(grunt) {
     }
 
     options.mode = mode || options.mode;
-    options.version = version || pkg.version.substr(0, pkg.version.length - '-SNAPSHOT'.length);
+
+    var snapshotSuffix = '-SNAPSHOT',
+        pkgVersionEndsWithSnapshot = pkg.version && pkg.version.indexOf(snapshotSuffix) >= 0,
+        lengthOfSnapshotSuffix = pkgVersionEndsWithSnapshot ? snapshotSuffix.length : 0;
+
+    options.version = version || pkg.version.substr(0, pkg.version.length - lengthOfSnapshotSuffix);
 
     if (options.nextVersion === 'null-SNAPSHOT') {
       grunt.fail.fatal('Failed to determine next development version ' +
