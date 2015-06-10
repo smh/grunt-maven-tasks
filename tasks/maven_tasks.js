@@ -28,7 +28,8 @@ module.exports = function(grunt) {
 
     options.goal = options.goal || this.target;
     options.commitPrefix = options.commitPrefix || '%s';
-
+    options.versionBumping = options.versionBumping === false ? false : true;
+    
     var pkg = grunt.file.readJSON(options.versionFile || 'package.json');
 
     if (options.goal === 'deploy') {
@@ -38,7 +39,7 @@ module.exports = function(grunt) {
       install(this, pkg);
     } else if (options.goal === 'release') {
       requireOptionProps(options, ['url']);
-      release(this, pkg, version, mode);
+      release(this, pkg, version, mode, options.versionBumping);
     }
   });
 
@@ -72,12 +73,13 @@ module.exports = function(grunt) {
       'maven:deploy-file');
   }
 
-  function release(task, pkg, version, mode) {
+  function release(task, pkg, version, mode, versionBumping) {
     var options = task.options({
       artifactId: pkg.name,
       packaging: 'zip',
       mode: 'minor',
-      gitpush: false
+      gitpush: false,
+      versionBumping: versionBumping
     });
 
     if (version && !mode && isValidMode(version)) {
@@ -86,7 +88,12 @@ module.exports = function(grunt) {
     }
 
     options.mode = mode || options.mode;
-    options.version = version || pkg.version.substr(0, pkg.version.length - '-SNAPSHOT'.length);
+
+    var snapshotSuffix = '-SNAPSHOT',
+        pkgVersionEndsWithSnapshot = pkg.version && pkg.version.indexOf(snapshotSuffix) >= 0,
+        lengthOfSnapshotSuffix = pkgVersionEndsWithSnapshot ? snapshotSuffix.length : 0;
+
+    options.version = version || pkg.version.substr(0, pkg.version.length - lengthOfSnapshotSuffix);
 
     if (options.nextVersion === 'null-SNAPSHOT') {
       grunt.fail.fatal('Failed to determine next development version ' +
@@ -103,13 +110,23 @@ module.exports = function(grunt) {
     guaranteeFileName(options);
     configureDestination(options, task);
     configureMaven(options, task);
+    
+    if (options.versionBumping) {
+      grunt.task.run(
+        'maven:version:' + options.version
+      );
+    }
 
     grunt.task.run(
-      'maven:version:' + options.version,
       'maven:package',
-      'maven:deploy-file',
-      'maven:version:' + options.nextVersion + ':deleteTag'
+      'maven:deploy-file'
     );
+    
+    if (options.versionBumping) {
+      grunt.task.run(
+        'maven:version:' + options.nextVersion + ':deleteTag'
+      );
+    }
 
     if (options.gitpush) {
       grunt.task.run(
