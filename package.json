@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/smh/grunt-maven-tasks.git"
+    "url": "https://github.com/smh/grunt-maven-tasks.git"
   },
   "bugs": {
     "url": "https://github.com/smh/grunt-maven-tasks/issues"
@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "semver": "~2.3.1",
-    "grunt-contrib-compress": "~0.7.0"
+    "grunt-contrib-compress": "~0.11.0"
   },
   "devDependencies": {
     "mocha": "~1.21.4",
@@ -39,7 +39,7 @@
     "rimraf": "~2.2.8",
     "grunt": "~0.4.5",
     "grunt-contrib-jshint": "~0.10.0",
-    "grunt-simple-mocha": "git://github.com/yaymukund/grunt-simple-mocha.git#7d1cb9bfd8580fc5369bd82e288f683bb7ca0d46"
+    "grunt-simple-mocha": "git+https://github.com/yaymukund/grunt-simple-mocha.git#7d1cb9bfd8580fc5369bd82e288f683bb7ca0d46"
   },
   "peerDependencies": {
     "grunt": "~0.4.5"
