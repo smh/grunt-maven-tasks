@@ -30,7 +30,7 @@ module.exports = function(grunt) {
         ui: 'bdd',
         reporter: 'tap'
       },
-      all: ['test/**/*.js']
+      all: ['test/**/zip-test.js']
     }
   });
 
