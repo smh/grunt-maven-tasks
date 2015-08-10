@@ -1,10 +1,12 @@
 'use strict';
 
+// Funny to go through the burden of making the code path/OS independent by using 'path' and 'rimraf' and then still
+// need the magic of "exec('ln -s ...')"
+
 var fs = require('fs');
 var path = require('path');
 var rimraf = require('rimraf');
 var async = require('async');
-var semver = require('semver');
 var jszip = require('jszip');
 
 var chai = require('chai');
@@ -15,6 +17,7 @@ var projectDir = path.join('/tmp', '/test-project');
 var relScriptFile = path.join('script','somescript.sh');
 var scriptDir = path.join(projectDir, 'script');
 var scriptFile = path.join(scriptDir, 'somescript.sh');
+var versionFile = "package.json";
 
 var initConfig = {
   maven: {
@@ -32,14 +35,12 @@ var initConfig = {
 
 
 describe('Test that correct access bits are set', function() {
-  var effectiveConfig = initConfig;
   var pkg={ name: 'test-project', version: '1.0.0-SNAPSHOT' };
   var target='install';
-  var versionFile='package.json';
 
   before(function(done) {
     async.series([
-      function(cb) { setupGruntProject(versionFile, pkg, effectiveConfig, cb); },
+      function(cb) { setupGruntProject(pkg, cb); },
       function(cb) { exec('grunt maven:' + target + ' --no-color', cb); }
     ], done);
   });
@@ -64,15 +65,13 @@ function exec(command, fn) {
 }
 
 function verifyZipFile(project, cb) {
-
   fs.readFile(path.join(projectDir, project + ".zip"),
 	      function(err, data) {
 		if (err) throw err;
 		var zip = new jszip(data);
-		//           var access=(zip.files['test-project-1.0.0-SNAPSHOT/script/somescript.sh'].unixPermissions & 511).toString(8);
 		var access=(zip.files[project + '/' + relScriptFile].unixPermissions & 511).toString(8);
-	        access.should.equal('755');
-		//access.should.equal('0');
+	        access.should.equal('755'); // When (the correct) grunt-contrib-compress 0.7 or higher is used.
+		//access.should.equal('0'); // When grunt-contrib-compress 0.4 is used.
 		cb();
 	      });
 }
@@ -90,15 +89,15 @@ function gruntfile(initConfig) {
     '};\n';
 }
 
-function setupGruntProject(versionFile, pkg, initConfig, fn) {
+function setupGruntProject(pkg, fn) {
   var commands = [
     function(cb) { rimraf(projectDir, cb); },
     function(cb) { fs.mkdir(projectDir, cb); },
     function(cb) { fs.mkdir(scriptDir, cb); },
     function(cb) { fs.writeFile(path.join(projectDir, versionFile), JSON.stringify(pkg), cb); },
     function(cb) { fs.writeFile(path.join(projectDir, 'Gruntfile.js'), gruntfile(initConfig), cb); },
-    function(cb) { fs.writeFile(scriptFile, "#!/bin/bash\nwho\n", cb); },
-    function(cb) { fs.chmod(scriptFile, '0755', cb); },
+    function(cb) { fs.writeFile(scriptFile, "#!/bin/bash\necho 'Hello world'\n", cb); },
+    function(cb) { fs.chmod(scriptFile, '755', cb); },
     function(cb) { exec('ln -s ' + path.join(__dirname, '..', 'node_modules'), cb); }
   ];
   async.series(commands, fn);
