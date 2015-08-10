@@ -12,6 +12,9 @@ chai.should();
 chai.use(require('chai-things'));
 
 var projectDir = path.join('/tmp', '/test-project');
+var relScriptFile = path.join('script','somescript.sh');
+var scriptDir = path.join(projectDir, 'script');
+var scriptFile = path.join(scriptDir, 'somescript.sh');
 
 var initConfig = {
 maven: {
@@ -28,20 +31,12 @@ maven: {
 };
 
 
-// test various install configurations
-['install'].forEach(function(target) {
-  testInstall(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT' });
-  //  testInstall(target, 'package.json', { name: 'test-project', version: '1.0.0', classifier: 'javadoc' });
-});
+describe('Test that correct access bits are set', function() {
+      var effectiveConfig = initConfig;
+      var pkg={ name: 'test-project', version: '1.0.0-SNAPSHOT' };
+      var target='install';
+      var versionFile='package.json';
 
-
-function testInstall(target, versionFile, pkg) {
-  describe(target + ' - ' + pkg.version + ':' + pkg.classifier + ' -', function() {
-    var effectiveConfig = initConfig;
-    if (pkg.classifier) {
-      effectiveConfig = JSON.parse(JSON.stringify(effectiveConfig)); // deep copy
-      effectiveConfig.maven[target].options.classifier = pkg.classifier;
-    }
     before(function(done) {
       async.series([
         function(cb) { setupGruntProject(versionFile, pkg, effectiveConfig, cb); },
@@ -49,14 +44,13 @@ function testInstall(target, versionFile, pkg) {
       ], done);
     });
     after(function(done) {
-	    rimraf(projectDir, function(err, res) { console.log('error: ' + err); done();});
-	    done();
+	     rimraf(projectDir, done);
+	    //done();
     });
     it('should not destroy file access bits', function(done) {
-	    verifyZipFile(done);
+	    verifyZipFile("test-project-1.0.0-SNAPSHOT", done);
 	});
   });
-}
 
 
 function exec(command, fn) {
@@ -69,16 +63,16 @@ function exec(command, fn) {
   });
 }
 
-function verifyZipFile(cb) {
+function verifyZipFile(project, cb) {
 
-    fs.readFile(path.join(projectDir, "test-project-1.0.0-SNAPSHOT.zip"),
+    fs.readFile(path.join(projectDir, project + ".zip"),
         function(err, data) {
            if (err) throw err;
            var zip = new jszip(data);
-           var access=(zip.files['test-project-1.0.0-SNAPSHOT/script/somescript.sh'].unixPermissions & 511).toString(8);
+	   //           var access=(zip.files['test-project-1.0.0-SNAPSHOT/script/somescript.sh'].unixPermissions & 511).toString(8);
+           var access=(zip.files[project + '/' + relScriptFile].unixPermissions & 511).toString(8);
 	   //           access.should.equal('755');
            access.should.equal('0');
-           rimraf(projectDir, cb);
            cb();
      });
 }
@@ -100,11 +94,11 @@ function setupGruntProject(versionFile, pkg, initConfig, fn) {
   var commands = [
     function(cb) { rimraf(projectDir, cb); },
     function(cb) { fs.mkdir(projectDir, cb); },
-    function(cb) { fs.mkdir(path.join(projectDir, "script"), cb); },
+    function(cb) { fs.mkdir(scriptDir, cb); },
     function(cb) { fs.writeFile(path.join(projectDir, versionFile), JSON.stringify(pkg), cb); },
     function(cb) { fs.writeFile(path.join(projectDir, 'Gruntfile.js'), gruntfile(initConfig), cb); },
-    function(cb) { fs.writeFile(path.join(projectDir, 'script/somescript.sh'), "#!/bin/bash\nwho\n", cb); },
-    function(cb) { fs.chmod(path.join(projectDir, 'script/somescript.sh'), '0755', cb); },
+    function(cb) { fs.writeFile(scriptFile, "#!/bin/bash\nwho\n", cb); },
+    function(cb) { fs.chmod(scriptFile, '0755', cb); },
     function(cb) { exec('ln -s ' + path.join(__dirname, '..', 'node_modules'), cb); }
   ];
   async.series(commands, fn);
