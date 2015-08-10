@@ -17,8 +17,8 @@ var scriptDir = path.join(projectDir, 'script');
 var scriptFile = path.join(scriptDir, 'somescript.sh');
 
 var initConfig = {
-maven: {
-  options: {
+  maven: {
+    options: {
       groupId: 'test.project',
       type: 'war'
     },
@@ -32,25 +32,25 @@ maven: {
 
 
 describe('Test that correct access bits are set', function() {
-      var effectiveConfig = initConfig;
-      var pkg={ name: 'test-project', version: '1.0.0-SNAPSHOT' };
-      var target='install';
-      var versionFile='package.json';
+  var effectiveConfig = initConfig;
+  var pkg={ name: 'test-project', version: '1.0.0-SNAPSHOT' };
+  var target='install';
+  var versionFile='package.json';
 
-    before(function(done) {
-      async.series([
-        function(cb) { setupGruntProject(versionFile, pkg, effectiveConfig, cb); },
-        function(cb) { exec('grunt maven:' + target + ' --no-color', cb); }
-      ], done);
-    });
-    after(function(done) {
-	     rimraf(projectDir, done);
-	    //done();
-    });
-    it('should not destroy file access bits', function(done) {
-	    verifyZipFile("test-project-1.0.0-SNAPSHOT", done);
-	});
+  before(function(done) {
+    async.series([
+      function(cb) { setupGruntProject(versionFile, pkg, effectiveConfig, cb); },
+      function(cb) { exec('grunt maven:' + target + ' --no-color', cb); }
+    ], done);
   });
+  after(function(done) {
+    rimraf(projectDir, done);
+    //done();
+  });
+  it('should not destroy file access bits', function(done) {
+    verifyZipFile("test-project-1.0.0-SNAPSHOT", done);
+  });
+});
 
 
 function exec(command, fn) {
@@ -65,29 +65,29 @@ function exec(command, fn) {
 
 function verifyZipFile(project, cb) {
 
-    fs.readFile(path.join(projectDir, project + ".zip"),
-        function(err, data) {
-           if (err) throw err;
-           var zip = new jszip(data);
-	   //           var access=(zip.files['test-project-1.0.0-SNAPSHOT/script/somescript.sh'].unixPermissions & 511).toString(8);
-           var access=(zip.files[project + '/' + relScriptFile].unixPermissions & 511).toString(8);
-	   //           access.should.equal('755');
-           access.should.equal('0');
-           cb();
-     });
+  fs.readFile(path.join(projectDir, project + ".zip"),
+	      function(err, data) {
+		if (err) throw err;
+		var zip = new jszip(data);
+		//           var access=(zip.files['test-project-1.0.0-SNAPSHOT/script/somescript.sh'].unixPermissions & 511).toString(8);
+		var access=(zip.files[project + '/' + relScriptFile].unixPermissions & 511).toString(8);
+	        access.should.equal('755');
+		//access.should.equal('0');
+		cb();
+	      });
 }
 
 
 function gruntfile(initConfig) {
   return 'var fs = require("fs");\n' +
-         'module.exports = function(grunt) {\n' +
-         '  grunt.initConfig(' + JSON.stringify(initConfig) + ');\n' +
-         '  grunt.loadTasks("' + path.join(__dirname, '..', 'tasks') + '")\n' +
-         '  grunt.registerTask("maven:install-file", function() {\n' +
-         '    var options = grunt.config("maven.install-file.options");\n' +
-         '    fs.writeFileSync(options.artifactId + "-install.json", JSON.stringify(options));\n' +
-         '  });\n' +
-         '};\n';
+    'module.exports = function(grunt) {\n' +
+    '  grunt.initConfig(' + JSON.stringify(initConfig) + ');\n' +
+    '  grunt.loadTasks("' + path.join(__dirname, '..', 'tasks') + '")\n' +
+    '  grunt.registerTask("maven:install-file", function() {\n' +
+    '    var options = grunt.config("maven.install-file.options");\n' +
+    '    fs.writeFileSync(options.artifactId + "-install.json", JSON.stringify(options));\n' +
+    '  });\n' +
+    '};\n';
 }
 
 function setupGruntProject(versionFile, pkg, initConfig, fn) {
