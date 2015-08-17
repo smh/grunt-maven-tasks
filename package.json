@@ -39,7 +39,8 @@
     "rimraf": "~2.2.8",
     "grunt": "~0.4.5",
     "grunt-contrib-jshint": "~0.10.0",
-    "grunt-simple-mocha": "git+https://github.com/yaymukund/grunt-simple-mocha.git#7d1cb9bfd8580fc5369bd82e288f683bb7ca0d46"
+    "grunt-simple-mocha": "git+https://github.com/yaymukund/grunt-simple-mocha.git#7d1cb9bfd8580fc5369bd82e288f683bb7ca0d46",
+    "jszip": "~2.5.0"
   },
   "peerDependencies": {
     "grunt": "~0.4.5"
