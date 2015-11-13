@@ -166,8 +166,8 @@ module.exports = function(grunt) {
     if (options.classifier) {
       args.push('-Dclassifier=' + options.classifier);
     }
-    if (options.uniqueVersion) {
-      args.push('-DuniqueVersion=' + options.classifier);
+    if (options.uniqueVersion === 'true') {
+      args.push('-DuniqueVersion=true');
     }
     // The lack of a space after the -s is critical
     // otherwise the path will be processed by maven incorrectly.
@@ -213,6 +213,9 @@ module.exports = function(grunt) {
     }
     if (options.classifier) {
       args.push('-Dclassifier=' + options.classifier);
+    }
+    if (options.uniqueVersion === 'true') {
+      args.push('-DuniqueVersion=true');
     }
     args.push('-Durl='          + options.url);
     if (options.repositoryId) {
