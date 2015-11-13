@@ -104,6 +104,12 @@ Optional
 
 The classifier to use when deploying to the maven repository
 
+#### options.uniqueVersion
+Type: `String`
+Optional
+
+Allow to generate timestamped artifacts.
+
 #### options.mode
 Type: `String`
 Default: minor

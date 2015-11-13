@@ -182,6 +182,9 @@ module.exports = function(grunt) {
     if (options.classifier) {
       args.push('-Dclassifier=' + options.classifier);
     }
+    if (options.uniqueVersion) {
+      args.push('-DuniqueVersion=' + options.classifier);
+    }
     // The lack of a space after the -s is critical
     // otherwise the path will be processed by maven incorrectly.
     if (options.settingsXml) {
