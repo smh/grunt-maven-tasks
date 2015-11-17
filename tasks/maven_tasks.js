@@ -55,7 +55,7 @@ module.exports = function(grunt) {
     configureDestination(options, task);
     configureMaven(options, task);
 
-    grunt.task.run('maven:package');
+    grunt.task.run('mvn:package');
   }
 
   function install(task, pkg) {
@@ -69,7 +69,7 @@ module.exports = function(grunt) {
     configureDestination(options, task);
     configureMaven(options, task);
 
-    grunt.task.run('maven:package',
+    grunt.task.run('mvn:package',
       'maven:install-file');
   }
 
@@ -84,7 +84,7 @@ module.exports = function(grunt) {
     configureDestination(options, task);
     configureMaven(options, task);
 
-    grunt.task.run('maven:package',
+    grunt.task.run('mvn:package',
       'maven:deploy-file');
   }
 
@@ -122,7 +122,7 @@ module.exports = function(grunt) {
 
     grunt.task.run(
       'maven:version:' + options.version,
-      'maven:package',
+      'mvn:package',
       'maven:deploy-file',
       'maven:version:' + options.nextVersion + ':deleteTag'
     );
@@ -155,16 +155,19 @@ module.exports = function(grunt) {
   }
 
   function configureMaven(options, task) {
-    grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging });
+    grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging, type: options.type });
     grunt.config.set('maven.package.files', task.files);
     grunt.config.set('maven.deploy-file.options', options);
     grunt.config.set('maven.install-file.options', options);
   }
 
-  grunt.registerTask('maven:package', function() {
+  grunt.registerTask('mvn:package', function() {
     var compress = require('grunt-contrib-compress/tasks/lib/compress')(grunt);
     compress.options = grunt.config('maven.package.options');
     compress.tar(grunt.config('maven.package.files'), this.async());
+
+    renameForKnownPackageTypeArtifacts(compress.options.archive,
+	(compress.options.type === 'war' || compress.options.type === 'jar') ? compress.options.type : compress.options.packaging);
   });
 
   grunt.registerTask('maven:install-file', function() {

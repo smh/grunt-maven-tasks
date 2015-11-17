@@ -23,6 +23,12 @@ grunt.loadNpmTasks('grunt-maven-tasks');
 
 If no goal is specified, the goal will be set to the target name. This means that the target name must be one of `install`, `deploy` or `release`. For more flexibility with the naming of your targets, and/or having multiple targets with the same goal, specify the goal explicitly.
 
+### package
+
+_Run the `grunt package` task with the `goal` option set to `package`._
+
+This tasks packages an artifact.
+
 ### install
 
 _Run the `grunt maven` task with the `goal` option set to `install`._
@@ -183,6 +189,12 @@ Running `grunt maven:release` will deploy the artifact to the `release-repo` fol
 grunt.initConfig({
   maven: {
     options: { groupId: 'com.example' },
+    'package': {
+      options: {
+        goal: 'package'
+      },
+      src: [ '**', '!node_modules/**' ]
+    },
     deploy: {
       options: {
         goal: 'deploy',
@@ -200,6 +212,7 @@ grunt.initConfig({
   }
 })
 
+grunt.registerTask('package', [ 'clean', 'test', 'maven:package' ]);
 grunt.registerTask('deploy', [ 'clean', 'test', 'maven:deploy' ]);
 grunt.registerTask('release', [ 'clean', 'test', 'maven:release' ]);
 ```
