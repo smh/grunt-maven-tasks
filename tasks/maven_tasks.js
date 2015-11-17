@@ -36,11 +36,27 @@ module.exports = function(grunt) {
       deploy(this, pkg);
     } else if (options.goal === 'install') {
       install(this, pkg);
+    } else if (options.goal === 'package') {
+      fpackage(this, pkg);
     } else if (options.goal === 'release') {
       requireOptionProps(options, ['url']);
       release(this, pkg, version, mode);
     }
   });
+  
+  function fpackage(task, pkg) {
+    var options = task.options({
+      artifactId: pkg.name,
+      version: pkg.version,
+      packaging: 'zip'
+    });
+
+    guaranteeFileName(options);
+    configureDestination(options, task);
+    configureMaven(options, task);
+
+    grunt.task.run('maven:package');
+  }
 
   function install(task, pkg) {
     var options = task.options({
