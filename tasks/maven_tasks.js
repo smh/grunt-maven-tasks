@@ -48,7 +48,7 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       version: pkg.version,
-      packaging: 'zip'
+      packaging: pkg.packaging
     });
 
     guaranteeFileName(options);
@@ -62,7 +62,7 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       version: pkg.version,
-      packaging: 'zip'
+      packaging: pkg.packaging
     });
 
     guaranteeFileName(options);
@@ -77,7 +77,7 @@ module.exports = function(grunt) {
     var options = task.options({
       artifactId: pkg.name,
       version: pkg.version,
-      packaging: 'zip'
+      packaging: pkg.packaging
     });
 
     guaranteeFileName(options);
@@ -91,7 +91,7 @@ module.exports = function(grunt) {
   function release(task, pkg, version, mode) {
     var options = task.options({
       artifactId: pkg.name,
-      packaging: 'zip',
+      packaging: pkg.packaging,
       mode: 'minor',
       gitpush: false
     });
@@ -142,7 +142,7 @@ module.exports = function(grunt) {
 
   function guaranteeFileName(options) {
     if (!options.file) {
-      options.file = getFileNameBase(options) + '.' + options.packaging;
+      options.file = getFileNameBase(options) + '.' + getExtension(options.packaging, options.classifier, options.type);
     }
   }
 
@@ -155,7 +155,10 @@ module.exports = function(grunt) {
   }
 
   function configureMaven(options, task) {
-    grunt.config.set('maven.package.options', { archive: options.file, mode: options.packaging, type: options.type });
+    
+    options.packaging = getExtension(options.packaging, options.classifier, options.type);
+
+    grunt.config.set('maven.package.options', { archive: options.file, mode: 'zip', extension: options.packaging });
     grunt.config.set('maven.package.files', task.files);
     grunt.config.set('maven.deploy-file.options', options);
     grunt.config.set('maven.install-file.options', options);
@@ -166,15 +169,11 @@ module.exports = function(grunt) {
     compress.options = grunt.config('maven.package.options');
     compress.tar(grunt.config('maven.package.files'), this.async());
 
-    renameForKnownPackageTypeArtifacts(compress.options.archive,
-	(compress.options.type === 'war' || compress.options.type === 'jar') ? compress.options.type : compress.options.packaging);
+    renameForKnownPackageTypeArtifacts(compress.options.archive, compress.options.extension);
   });
 
   grunt.registerTask('maven:install-file', function() {
     var options = grunt.config('maven.install-file.options');
-
-    options.packaging = (options.type === 'war' || options.type === 'jar') ? options.type : options.packaging;
-    options.file = renameForKnownPackageTypeArtifacts(options.file, options.packaging);
 
     var args = [ 'install:install-file' ];
     args.push('-Dfile='         + options.file);
@@ -216,9 +215,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('maven:deploy-file', function() {
     var options = grunt.config('maven.deploy-file.options');
-
-    options.packaging = (options.type === 'war' || options.type === 'jar') ? options.type : options.packaging;
-    options.file = renameForKnownPackageTypeArtifacts(options.file, options.packaging);
 
     var args = [ 'deploy:deploy-file' ];
     args.push('-Dfile='         + options.file);
@@ -359,15 +355,13 @@ module.exports = function(grunt) {
     }
   }
 
-  function renameForKnownPackageTypeArtifacts(fileName, packaging) {
+  function getExtension(packaging, classifier, type) {
+    if(classifier === 'javadoc' || classifier === 'sources') return 'zip';
+    return type ||  packaging || 'zip';
+  }
 
-      var newFileName = fileName;
-      if (packaging === 'war') {
-          newFileName = fileName.replace('zip', 'war');
-      } else if (packaging === 'jar') {
-          newFileName = fileName.replace('zip', 'jar');
-      }
-
+  function renameForKnownPackageTypeArtifacts(fileName, extension) {
+      var newFileName = fileName.replace('zip', extension);
       try {
           fs.renameSync(fileName, newFileName);
           return newFileName;
