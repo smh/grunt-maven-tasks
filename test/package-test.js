@@ -33,7 +33,7 @@ maven: {
   testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0' });
   testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT', packaging: 'war' });
   testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0', packaging: 'zip' });
-  testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT', packaging: 'tar.gz' });
+  testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT', packaging: 'tgz' });
 });
 
 function testPackage(target, versionFile, pkg) {
@@ -65,8 +65,7 @@ function exec(command, fn) {
 }
 
 function verifyPackageFile(project, version, classifier, packaging, cb) {
-  var extension = (initConfig.maven.options.type === 'war' || initConfig.maven.options.type === 'jar') ? initConfig.maven.options.type : packaging;
-  var filename = project + '-' + version + (classifier? '-' + classifier : '') + '.' + extension;
+  var filename = project + '-' + version + (classifier? '-' + classifier : '') + '.' + getExtension(packaging, classifier, initConfig.maven.options.type);
 
   fs.readFile(path.join(projectDir, filename),
       function(err, data) {
@@ -75,6 +74,13 @@ function verifyPackageFile(project, version, classifier, packaging, cb) {
 	cb();
       });
 }
+
+// copy from maven_task
+function getExtension(packaging, classifier, type) {
+    if(classifier === 'javadoc' || classifier === 'sources') return 'zip';
+    return type ||  packaging || 'zip';
+  }
+
 
 function gruntfile(initConfig) {
   return 'var fs = require("fs");\n' +

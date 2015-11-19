@@ -46,10 +46,9 @@ describe('Test that correct access bits are set', function() {
   });
   after(function(done) {
     rimraf(projectDir, done);
-    //done();
   });
   it('should not destroy file access bits', function(done) {
-    verifyZipFile("test-project-1.0.0-SNAPSHOT", done);
+    verifyZipFile(pkg, done);
   });
 });
 
@@ -64,16 +63,18 @@ function exec(command, fn) {
   });
 }
 
-function verifyZipFile(project, cb) {
-  fs.readFile(path.join(projectDir, project + ".zip"),
-	      function(err, data) {
-		if (err) throw err;
-		var zip = new jszip(data);
-		var access=(zip.files[project + '/' + relScriptFile].unixPermissions & 511).toString(8);
-	        access.should.equal('755'); // When (the correct) grunt-contrib-compress 0.7 or higher is used.
-		//access.should.equal('0'); // When grunt-contrib-compress 0.4 is used.
-		cb();
-	      });
+function verifyZipFile(pkg, cb) {
+  var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, pkg.name + '-install.json')));
+
+  fs.readFile(path.join(projectDir, deploy.file),
+      function(err, data) {
+	if (err) throw err;
+	var zip = new jszip(data);
+	var access=(zip.files[pkg.name +'-'+pkg.version + '/' + relScriptFile].unixPermissions & 511).toString(8);
+        access.should.equal('755'); // When (the correct) grunt-contrib-compress 0.7 or higher is used.
+	//access.should.equal('0'); // When grunt-contrib-compress 0.4 is used.
+	cb();
+      });
 }
 
 
