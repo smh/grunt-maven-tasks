@@ -68,7 +68,9 @@ function verifyZipFile(pkg, cb) {
 
   fs.readFile(path.join(projectDir, deploy.file),
       function(err, data) {
-	if (err) throw err;
+	if (err) {
+    throw err;
+  }
 	var zip = new jszip(data);
 	var access=(zip.files[pkg.name +'-'+pkg.version + '/' + relScriptFile].unixPermissions & 511).toString(8);
         access.should.equal('755'); // When (the correct) grunt-contrib-compress 0.7 or higher is used.

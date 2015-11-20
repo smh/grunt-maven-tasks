@@ -77,7 +77,9 @@ function verifyPackageFile(project, version, classifier, packaging, cb) {
 
 // copy from maven_task
 function getExtension(packaging, classifier, type) {
-    if(classifier === 'javadoc' || classifier === 'sources') return 'zip';
+    if(classifier === 'javadoc' || classifier === 'sources') {
+      return 'zip';
+    }
     return type ||  packaging || 'zip';
   }
 
