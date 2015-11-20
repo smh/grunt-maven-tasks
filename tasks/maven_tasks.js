@@ -136,7 +136,7 @@ module.exports = function(grunt) {
     
     if (options.gitpushtag) {
       grunt.task.run(
-        'maven:gitpushtag:' + options.version
+        'maven:gitpushtag:v' + options.version
       );
     }
   }
