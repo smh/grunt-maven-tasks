@@ -49,13 +49,15 @@ maven: {
     },
     release: {
       options: {
-        url: 'file://repo'
+        url: 'file://repo',
+        packaging: 'zip'
       }
     },
     releaseWithGoal: {
       options: {
         goal: 'release',
-        url: 'file://repo'
+        url: 'file://repo',
+        packaging: 'zip'
       }
     }
   }
@@ -95,6 +97,7 @@ maven: {
   testInstall(target, 'bower.json', { name: 'test-project', version: '1.0.0-SNAPSHOT' });
 });
 
+
 function testDeploy(target, versionFile, pkg) {
   describe(target + ' - ' + pkg.version + ':' + pkg.classifier + ' -', function() {
     var effectiveConfig = initConfig;
@@ -113,10 +116,7 @@ function testDeploy(target, versionFile, pkg) {
     });
 
     it('should deploy artifact to repository', function() {
-      verifyDeployedFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip', 'file://repo');
-    });
-    it('should rename artifacts with war-extension when configured as a type', function() {
-      verifyDeployedFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip', 'file://repo', null, 'war');
+      verifyDeployedFiles('test.project', 'test-project', pkg.version, pkg.classifier, pkg.packaging, 'file://repo', null, initConfig.maven.options.type);
     });
 
     it('should not touch package.json', function() {
@@ -144,10 +144,7 @@ function testInstall(target, versionFile, pkg) {
     });
 
     it('should install artifact to repository', function() {
-      verifyInstalledFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip');
-    });
-    it('should rename artifacts with war-extension when configured as a type', function() {
-      verifyInstalledFiles('test.project', 'test-project', pkg.version, pkg.classifier, 'zip', null, 'war');
+      verifyInstalledFiles('test.project', 'test-project', pkg.version, pkg.classifier, pkg.packaging, null, initConfig.maven.options.type);
     });
 
     it('should not touch package.json', function() {
@@ -160,7 +157,8 @@ function testInstall(target, versionFile, pkg) {
 function testRelease(cmd, options) {
   //describe(cmd + (options.withGit ? ' with git project' : ''), function() {
   describe(cmd + ' -', function() {
-    var pkg = { name: 'test-project', version: options.current };
+    var pkg = { name: 'test-project', version: options.current, packaging: 'zip' };
+
     before(function(done) {
       async.series([
         function(cb) { setupGruntProject('package.json', pkg, initConfig, options.withGit, cb); },
@@ -172,7 +170,7 @@ function testRelease(cmd, options) {
     });
 
     it('should deploy artifact to repository', function() {
-      verifyDeployedFiles('test.project', 'test-project', options.release, null, 'zip', 'file://repo');
+      verifyDeployedFiles('test.project', 'test-project', options.release, pkg.classifier, pkg.packaging, 'file://repo', null, initConfig.maven.options.type);
     });
 
     it('should update package.json version to ' + options.next, function() {
@@ -214,16 +212,23 @@ function exec(command, fn) {
   });
 }
 
+
+// copy from maven_task
+function getExtension(packaging, classifier, type) {
+    if(classifier === 'javadoc' || classifier === 'sources') return 'zip';
+    return type ||  packaging || 'zip';
+  }
+
 function verifyDeployedFiles(groupId, artifactId, version, classifier, packaging, url, repositoryId, type) {
   var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, artifactId + '-deploy.json')));
-  deploy.should.have.property('file', artifactId + '-' + version + (classifier? '-' + classifier : '') + '.' + packaging);
+  deploy.should.have.property('file', artifactId + '-' + version + (classifier? '-' + classifier : '') + '.' + getExtension(packaging, classifier, type));
   deploy.should.have.property('groupId', groupId);
   deploy.should.have.property('artifactId', artifactId);
   deploy.should.have.property('version', version);
   if (classifier) {
     deploy.should.have.property('classifier', classifier);
   }
-  deploy.should.have.property('packaging', packaging);
+  deploy.should.have.property('packaging', getExtension(packaging, classifier, type));
   deploy.should.have.property('url', url);
   if (repositoryId) {
     deploy.should.have.property('repositoryId', repositoryId);
@@ -235,14 +240,14 @@ function verifyDeployedFiles(groupId, artifactId, version, classifier, packaging
 
 function verifyInstalledFiles(groupId, artifactId, version, classifier, packaging, repositoryId, type) {
   var deploy = JSON.parse(fs.readFileSync(path.join(projectDir, artifactId + '-install.json')));
-  deploy.should.have.property('file', artifactId + '-' + version + (classifier? '-' + classifier : '') + '.' + packaging);
+  deploy.should.have.property('file', artifactId + '-' + version + (classifier? '-' + classifier : '') + '.' + getExtension(packaging, classifier, type));
   deploy.should.have.property('groupId', groupId);
   deploy.should.have.property('artifactId', artifactId);
   deploy.should.have.property('version', version);
   if (classifier) {
     deploy.should.have.property('classifier', classifier);
   }
-  deploy.should.have.property('packaging', packaging);
+  deploy.should.have.property('packaging', getExtension(packaging, classifier, type));
   if (repositoryId) {
     deploy.should.have.property('repositoryId', repositoryId);
   }
