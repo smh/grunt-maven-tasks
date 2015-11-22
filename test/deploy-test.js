@@ -215,7 +215,9 @@ function exec(command, fn) {
 
 // copy from maven_task
 function getExtension(packaging, classifier, type) {
-    if(classifier === 'javadoc' || classifier === 'sources') return 'zip';
+    if(classifier === 'javadoc' || classifier === 'sources') {
+      return 'zip';
+    }
     return type ||  packaging || 'zip';
   }
 

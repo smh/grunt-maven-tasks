@@ -93,7 +93,8 @@ module.exports = function(grunt) {
       artifactId: pkg.name,
       packaging: pkg.packaging,
       mode: 'minor',
-      gitpush: false
+      gitpush: false,
+      gitpushtag: false
     });
 
     if (version && !mode && isValidMode(version)) {
@@ -132,7 +133,12 @@ module.exports = function(grunt) {
         'maven:gitpush'
       );
     }
-
+    
+    if (options.gitpushtag) {
+      grunt.task.run(
+        'maven:gitpushtag:v' + options.version
+      );
+    }
   }
 
   function getFileNameBase(options) {
@@ -317,6 +323,22 @@ module.exports = function(grunt) {
       done(err);
     });
   });
+  
+  grunt.registerTask('maven:gitpushtag', 'Pushes tag to git', function(tag) {
+    var done = this.async();
+
+    grunt.verbose.write('Pushing tag ' + tag + 'to git');
+
+    gitPushTag(tag, function(err) {
+      if (err) {
+        grunt.log.error().error('Failed to push new version to remote');
+      } else {
+        grunt.log.writeln('Pushed new version to remote');
+      }
+      done(err);
+    });
+  });
+
 
   function isGitRepo(fn) {
     grunt.util.spawn({ cmd: 'git', args: ['status', '--porcelain'] }, function(err, result, code) {
@@ -330,6 +352,12 @@ module.exports = function(grunt) {
     });
   }
 
+  function gitPushTag(version, fn) {
+    grunt.util.spawn({ cmd: 'git', args: ['push', 'origin', version] }, function (err, result, code) {
+      fn(err);
+    });
+  }
+  
   function isValidMode(mode) {
     var validModes = ['major', 'minor', 'patch', 'build'].join('|');
 
@@ -356,7 +384,9 @@ module.exports = function(grunt) {
   }
 
   function getExtension(packaging, classifier, type) {
-    if(classifier === 'javadoc' || classifier === 'sources') return 'zip';
+    if(classifier === 'javadoc' || classifier === 'sources') {
+      return 'zip';
+    }
     return type ||  packaging || 'zip';
   }
 
