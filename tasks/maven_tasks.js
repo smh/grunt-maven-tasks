@@ -247,6 +247,11 @@ module.exports = function(grunt) {
       // otherwise the path will be processed by maven incorrectly.
       args.push('-s' + options.settingsXml);
     }
+    // Optional Parameters List : 
+    // https://maven.apache.org/plugins/maven-deploy-plugin/deploy-mojo.html
+    if (Array.isArray(options.optionalParams)) {
+      args = args.concat(options.optionalParams);
+    }
     if (grunt.debug || options.debug) {
       args.push('-e');
       args.push('-X');

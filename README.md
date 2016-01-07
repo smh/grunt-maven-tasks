@@ -143,49 +143,62 @@ Optional
 
 The repository id of the repository to deploy to. Used for looking up authentication in settings.xml.
 
-### options.type
+#### options.type
 Type: `String`
 Optional
 
 Enables you to choose a different file extension for your artifact besides .zip which is useful when using the Maven WAR-plugin
 
-### options.injectDestFolder
+#### options.injectDestFolder
 Type: `String`
 Optional
 
 Enables you to turn off the injection of destination folder inside your artifact allowing you to choose the structure you want by configuring the compress task.
 
-### options.destFolder
+#### options.destFolder
 Type: `String`
 Optional
 
 Specifies the name of the folder to be injected inside the artifact. If not specified, this will be auto-generated.
 
-### options.commitPrefix
+#### options.commitPrefix
 Type: `String`
 Optional
 
 Prefix for the commit message when releasing.
 
-### options.gitpush
+#### options.gitpush
 Type: `Boolean`
 Optional
 Default: false
 
 If `true`, runs git push after updating the `package.json` with the next version.
 
-### options.gitpushtag
+#### options.gitpushtag
 Type: `Boolean`
 Optional
 Default: false
 
 If `true`, runs git push for the tag after updating the `package.json` with the next version.
 
-### options.unsecure
+#### options.unsecure
 Type: `Boolean`
 Optional
 
 If `true`, runs maven with `-Dmaven.wagon.http.ssl.insecure=true` and `-Dmaven.wagon.http.ssl.allowall=true`
+
+#### options.settingsXml
+Type: `String`
+Optional
+
+Specifies the settings.xml file for `-s` argument.
+
+#### options.optionalParams
+Type: `Array`
+Optional
+
+Appends more optional parameters for `mvn deploy`. [optional parameters list](https://maven.apache.org/plugins/maven-deploy-plugin/deploy-mojo.html)
+
 ### Files
 
 Files may be specified using any of the supported [Grunt file mapping formats](http://gruntjs.com/configuring-tasks#files).
