@@ -171,11 +171,14 @@ module.exports = function(grunt) {
   }
 
   grunt.registerTask('mvn:package', function() {
+    var done = this.async();
+      
     var compress = require('grunt-contrib-compress/tasks/lib/compress')(grunt);
     compress.options = grunt.config('maven.package.options');
-    compress.tar(grunt.config('maven.package.files'), this.async());
-
-    renameForKnownPackageTypeArtifacts(compress.options.archive, compress.options.extension);
+    compress.tar(grunt.config('maven.package.files'), function(){
+      renameForKnownPackageTypeArtifacts(compress.options.archive, compress.options.extension);
+      done();
+    });
   });
 
   grunt.registerTask('maven:install-file', function() {
