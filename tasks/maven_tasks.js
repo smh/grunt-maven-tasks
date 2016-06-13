@@ -164,7 +164,7 @@ module.exports = function(grunt) {
     
     options.packaging = getExtension(options.packaging, options.classifier, options.type);
 
-    grunt.config.set('maven.package.options', { archive: options.file, mode: 'zip', extension: options.packaging });
+    grunt.config.set('maven.package.options', { archive: options.file, mode: ['tar', 'tgz', 'gzip', 'gz'].indexOf(options.packaging) > 0 ? options.packaging : 'zip', extension: options.packaging });
     grunt.config.set('maven.package.files', task.files);
     grunt.config.set('maven.deploy-file.options', options);
     grunt.config.set('maven.install-file.options', options);
