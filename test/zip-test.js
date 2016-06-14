@@ -68,14 +68,17 @@ function verifyZipFile(pkg, cb) {
 
   fs.readFile(path.join(projectDir, deploy.file),
       function(err, data) {
-	if (err) {
-    throw err;
-  }
-	var zip = new jszip(data);
-	var access=(zip.files[pkg.name +'-'+pkg.version + '/' + relScriptFile].unixPermissions & 511).toString(8);
-        access.should.equal('755'); // When (the correct) grunt-contrib-compress 0.7 or higher is used.
-	//access.should.equal('0'); // When grunt-contrib-compress 0.4 is used.
-	cb();
+        if (err) {
+          throw err;
+        }
+
+        jszip.loadAsync(data).then(function(zip) {
+          var access = (zip.files[pkg.name + '-' + pkg.version + '/' + relScriptFile].unixPermissions & 511).toString(8);
+          access.should.equal('755'); // When (the correct) grunt-contrib-compress 0.7 or higher is used.
+          cb();
+        }, function() {
+          throw 'Invalid zip file';
+        });
       });
 }
 
