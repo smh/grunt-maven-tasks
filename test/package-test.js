@@ -17,12 +17,11 @@ var initConfig = {
 maven: {
   options: {
       groupId: 'test.project', 
-      type: 'war'
     },
-    'package': {
+    package: {
       options: {
         goal: 'package',
-	src: [ '**', '!node_modules/**' ],
+        src: [ '**', '!node_modules/**' ]
       }
     }
   }
@@ -33,11 +32,11 @@ maven: {
   testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0' });
   testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT', packaging: 'war' });
   testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0', packaging: 'zip' });
-  testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT', packaging: 'tgz' });
+  testPackage(target, 'package.json', { name: 'test-project', version: '1.0.0-SNAPSHOT', packaging: 'tgz', mode: 'tgz'});
 });
 
 function testPackage(target, versionFile, pkg) {
-  describe(target + ' - ' + pkg.version + ':' + pkg.classifier + ' -', function() {
+  describe(target + ' - ' + pkg.version + ':' + pkg.classifier + (pkg.packaging ? ':' + pkg.packaging : '') + ' -', function() {
     before(function(done) {
       async.series([
         function(cb) { setupGruntProject(versionFile, pkg, initConfig, cb); },
@@ -49,7 +48,7 @@ function testPackage(target, versionFile, pkg) {
     });
 
     it('should create a package file', function(done) {
-      verifyPackageFile(pkg.name, pkg.version, pkg.classifier, pkg.packaging, done);
+      verifyPackageFile(pkg.name, pkg.version, pkg.classifier, pkg.packaging, pkg.mode, done);
     });
   });
 }
@@ -64,15 +63,35 @@ function exec(command, fn) {
   });
 }
 
-function verifyPackageFile(project, version, classifier, packaging, cb) {
+function verifyPackageFile(project, version, classifier, packaging, mode, cb) {
   var filename = project + '-' + version + (classifier? '-' + classifier : '') + '.' + getExtension(packaging, classifier, initConfig.maven.options.type);
 
   fs.readFile(path.join(projectDir, filename),
       function(err, data) {
-	if (err) { throw err; }
-	var zip = new jszip(data);
-	cb();
-      });
+	if (err) { cb(err); }
+    switch(mode) {
+      case 'tgz':
+        if(!data) {
+          cb('File data is null');
+        } else if (data.length < 3) {
+          cb('tgz package content is too small: ' + data.length);
+        } else if (data[0] !== 0x1f) {
+          cb('Expect first byte[0x1f], got ' + data[0]);
+        } else if (data[1] !== 0x8b) {
+          cb('Expect first byte[0x8b], got ' + data[1]);
+        } else if (data[2] !== 0x08) {
+          cb('Expect first byte[0x08], got ' + data[2]);
+        } else {
+          cb();
+        }
+        break;
+      default:
+        jszip.loadAsync(data).then(function() {
+          cb();
+        }, cb);
+        break;
+    }
+  });
 }
 
 // copy from maven_task

@@ -161,10 +161,8 @@ module.exports = function(grunt) {
   }
 
   function configureMaven(options, task) {
-    
     options.packaging = getExtension(options.packaging, options.classifier, options.type);
-
-    grunt.config.set('maven.package.options', { archive: options.file, mode: 'zip', extension: options.packaging });
+    grunt.config.set('maven.package.options', { archive: options.file, extension: options.packaging });
     grunt.config.set('maven.package.files', task.files);
     grunt.config.set('maven.deploy-file.options', options);
     grunt.config.set('maven.install-file.options', options);
@@ -172,9 +170,13 @@ module.exports = function(grunt) {
 
   grunt.registerTask('mvn:package', function() {
     var done = this.async();
-      
+    var options = grunt.config('maven.package.options');
+    if(!options.mode) {
+      var packaging = options.packaging || options.extension;
+      options.mode = (packaging === 'tar' || packaging === 'tgz' || packaging === 'gzip' || packaging === 'gz' || packaging === 'tar.gz') ? packaging : 'zip';
+    }
     var compress = require('grunt-contrib-compress/tasks/lib/compress')(grunt);
-    compress.options = grunt.config('maven.package.options');
+    compress.options = options;
     compress.tar(grunt.config('maven.package.files'), function(){
       renameForKnownPackageTypeArtifacts(compress.options.archive, compress.options.extension);
       done();
