@@ -40,10 +40,10 @@ module.exports = function(grunt) {
       fpackage(this, pkg);
     } else if (options.goal === 'release') {
       requireOptionProps(options, ['url']);
-      release(this, pkg, version, mode);
+      release(this, pkg, version, mode, options.buildTask);
     }
   });
-  
+
   function fpackage(task, pkg) {
     var options = task.options({
       artifactId: pkg.name,
@@ -88,7 +88,7 @@ module.exports = function(grunt) {
       'maven:deploy-file');
   }
 
-  function release(task, pkg, version, mode) {
+  function release(task, pkg, version, mode, buildTask) {
     var options = task.options({
       artifactId: pkg.name,
       packaging: pkg.packaging,
@@ -122,7 +122,11 @@ module.exports = function(grunt) {
     configureMaven(options, task);
 
     grunt.task.run(
-      'maven:version:' + options.version,
+      'maven:version:' + options.version);
+    if(buildTask) {
+      grunt.task.run(buildTask);
+    }
+    grunt.task.run(
       'mvn:package',
       'maven:deploy-file',
       'maven:version:' + options.nextVersion + ':deleteTag'
@@ -133,7 +137,7 @@ module.exports = function(grunt) {
         'maven:gitpush'
       );
     }
-    
+
     if (options.gitpushtag) {
       grunt.task.run(
         'maven:gitpushtag:v' + options.version
@@ -162,7 +166,7 @@ module.exports = function(grunt) {
 
   function configureMaven(options, task) {
     options.packaging = getExtension(options.packaging, options.classifier, options.type);
-    grunt.config.set('maven.package.options', { archive: options.file, extension: options.packaging });
+    grunt.config.set('maven.package.options', { archive: options.file, extension: options.packaging, expand: true });
     grunt.config.set('maven.package.files', task.files);
     grunt.config.set('maven.deploy-file.options', options);
     grunt.config.set('maven.install-file.options', options);
@@ -226,6 +230,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('maven:deploy-file', function() {
     var options = grunt.config('maven.deploy-file.options');
+    requireOptionProps(options, ['url']);
 
     var args = [ 'deploy:deploy-file' ];
     args.push('-Dfile='         + options.file);
@@ -252,7 +257,7 @@ module.exports = function(grunt) {
       // otherwise the path will be processed by maven incorrectly.
       args.push('-s' + options.settingsXml);
     }
-    // Optional Parameters List : 
+    // Optional Parameters List :
     // https://maven.apache.org/plugins/maven-deploy-plugin/deploy-mojo.html
     if (Array.isArray(options.optionalParams)) {
       args = args.concat(options.optionalParams);
@@ -333,7 +338,7 @@ module.exports = function(grunt) {
       done(err);
     });
   });
-  
+
   grunt.registerTask('maven:gitpushtag', 'Pushes tag to git', function(tag) {
     var done = this.async();
 
@@ -367,7 +372,7 @@ module.exports = function(grunt) {
       fn(err);
     });
   }
-  
+
   function isValidMode(mode) {
     var validModes = ['major', 'minor', 'patch', 'build'].join('|');
 
@@ -401,12 +406,12 @@ module.exports = function(grunt) {
   }
 
   function renameForKnownPackageTypeArtifacts(fileName, extension) {
-      var newFileName = fileName.replace('zip', extension);
-      try {
-          fs.renameSync(fileName, newFileName);
-          return newFileName;
-      } catch (e) {
-          throw e;
-      }
+    var newFileName = fileName.replace('zip', extension);
+    try {
+      fs.renameSync(fileName, newFileName);
+      return newFileName;
+    } catch (e) {
+      throw e;
+    }
   }
 };
